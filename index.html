@@ -1,0 +1,2658 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jira でスクラムを学ぶ — 実践レクチャー</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --surface3: #30363d;
+    --accent: #0052cc;
+    --accent2: #0747a6;
+    --accent-light: #4c9aff;
+    --green: #36b37e;
+    --yellow: #ffab00;
+    --red: #de350b;
+    --purple: #6554c0;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --text-dim: #6e7681;
+    --border: #30363d;
+    --jira-blue: #0052cc;
+    --jira-bg: #f4f5f7;
+    --jira-text: #172b4d;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* HEADER */
+  .hero {
+    background: linear-gradient(135deg, #0052cc 0%, #0747a6 50%, #091e42 100%);
+    padding: 64px 40px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: rgba(76,154,255,0.12);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.9);
+    margin-bottom: 24px;
+    letter-spacing: 0.5px;
+  }
+  .hero-title {
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 16px;
+  }
+  .hero-title span { color: #4c9aff; }
+  .hero-sub {
+    color: rgba(255,255,255,0.75);
+    font-size: 17px;
+    max-width: 600px;
+    margin-bottom: 36px;
+  }
+  .hero-meta {
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255,255,255,0.8);
+    font-size: 13px;
+  }
+  .meta-icon {
+    width: 20px; height: 20px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+  }
+
+  /* PROGRESS NAV */
+  .progress-nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 18px;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    color: var(--text-muted);
+    font-size: 13px;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .nav-item:hover { color: var(--text); border-bottom-color: var(--border); }
+  .nav-item.active { color: var(--accent-light); border-bottom-color: var(--accent-light); }
+  .nav-num {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--surface3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+  }
+  .nav-item.active .nav-num { background: var(--accent); color: #fff; }
+
+  /* MAIN LAYOUT */
+  .main { max-width: 1100px; margin: 0 auto; padding: 48px 40px; }
+
+  /* STEP SECTION */
+  .step-section {
+    margin-bottom: 80px;
+    scroll-margin-top: 60px;
+  }
+  .step-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+  .step-num {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 18px;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(0,82,204,0.4);
+  }
+  .step-title { font-size: 26px; font-weight: 700; color: var(--text); }
+  .step-desc { color: var(--text-muted); margin-top: 4px; font-size: 14px; }
+
+  /* CONTENT CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title::before {
+    content: '';
+    width: 3px; height: 14px;
+    background: var(--accent-light);
+    border-radius: 2px;
+  }
+
+  .info-box {
+    background: rgba(76,154,255,0.07);
+    border: 1px solid rgba(76,154,255,0.25);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .info-box p { color: var(--text); font-size: 14px; line-height: 1.7; }
+
+  .tip-box {
+    background: rgba(54,179,126,0.07);
+    border: 1px solid rgba(54,179,126,0.3);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .tip-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+  .tip-text { font-size: 13px; color: var(--text-muted); }
+  .tip-text strong { color: var(--green); }
+
+  /* ===== JIRA MOCKUPS ===== */
+  .jira-window {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* Jira Top Bar */
+  .jira-topbar {
+    background: #0052cc;
+    padding: 0 16px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .jira-logo {
+    display: flex; align-items: center; gap: 8px;
+    color: #fff; font-weight: 700; font-size: 15px;
+  }
+  .jira-logo-icon {
+    width: 24px; height: 24px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+  .jira-topnav {
+    display: flex; align-items: center; gap: 2px;
+    margin-left: 12px;
+  }
+  .jira-topnav-item {
+    color: rgba(255,255,255,0.85);
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .jira-topnav-item:hover { background: rgba(255,255,255,0.15); }
+  .jira-search {
+    margin-left: auto;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 5px 14px;
+    color: rgba(255,255,255,0.7);
+    font-size: 13px;
+    display: flex; align-items: center; gap: 8px;
+    min-width: 220px;
+  }
+
+  /* Jira Sidebar + Content */
+  .jira-body {
+    display: flex;
+    min-height: 420px;
+  }
+  .jira-sidebar {
+    width: 220px;
+    background: #f4f5f7;
+    border-right: 1px solid #dfe1e6;
+    padding: 16px 0;
+    flex-shrink: 0;
+  }
+  .jira-project-header {
+    padding: 8px 16px 16px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid #dfe1e6;
+    margin-bottom: 8px;
+  }
+  .jira-proj-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #0052cc, #0747a6);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 14px; font-weight: 700;
+  }
+  .jira-proj-name { font-size: 13px; font-weight: 600; color: #172b4d; }
+  .jira-proj-type { font-size: 11px; color: #6b778c; }
+  .jira-nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 16px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #42526e;
+    border-radius: 0;
+  }
+  .jira-nav-item:hover { background: #e4e6eb; }
+  .jira-nav-item.active {
+    background: #e9f2ff;
+    color: #0052cc;
+    font-weight: 600;
+    border-left: 3px solid #0052cc;
+    padding-left: 13px;
+  }
+  .jira-nav-icon { font-size: 15px; width: 18px; text-align: center; }
+
+  .jira-content { flex: 1; background: #fff; overflow: auto; }
+
+  /* Backlog View */
+  .jira-backlog-header {
+    padding: 20px 24px 12px;
+    border-bottom: 1px solid #dfe1e6;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .jira-page-title {
+    font-size: 20px; font-weight: 700; color: #172b4d;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .jira-breadcrumb {
+    font-size: 12px; color: #6b778c;
+    margin-bottom: 4px;
+  }
+
+  .jira-toolbar {
+    padding: 10px 24px;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid #f4f5f7;
+  }
+  .jira-btn {
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+    border: none;
+    font-weight: 500;
+    font-family: inherit;
+  }
+  .jira-btn-primary { background: #0052cc; color: #fff; }
+  .jira-btn-secondary { background: #f4f5f7; color: #42526e; border: 1px solid #dfe1e6; }
+  .jira-btn-subtle { background: transparent; color: #42526e; }
+
+  /* Sprint Block */
+  .sprint-block {
+    margin: 16px 24px;
+    border: 1px solid #dfe1e6;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .sprint-header {
+    background: #f4f5f7;
+    padding: 10px 16px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #dfe1e6;
+  }
+  .sprint-header:hover { background: #ebecf0; }
+  .sprint-chevron { color: #42526e; font-size: 12px; transition: transform 0.2s; }
+  .sprint-name { font-size: 14px; font-weight: 600; color: #172b4d; }
+  .sprint-meta { font-size: 12px; color: #6b778c; margin-left: 4px; }
+  .sprint-count { font-size: 12px; color: #6b778c; margin-left: auto; }
+  .sprint-actions { display: flex; gap: 8px; }
+  .sprint-action-btn {
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    border: none;
+    font-weight: 600;
+  }
+  .start-sprint-btn { background: #0052cc; color: #fff; }
+  .edit-sprint-btn { background: #f4f5f7; color: #42526e; border: 1px solid #dfe1e6; }
+
+  /* Issue Row */
+  .issue-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 16px;
+    border-bottom: 1px solid #f4f5f7;
+    cursor: pointer;
+  }
+  .issue-row:hover { background: #f8f9fc; }
+  .issue-type {
+    width: 18px; height: 18px;
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; flex-shrink: 0;
+  }
+  .issue-type.story { background: #e3fcef; color: #00875a; }
+  .issue-type.bug { background: #ffebe6; color: #de350b; }
+  .issue-type.task { background: #deebff; color: #0052cc; }
+  .issue-key { font-size: 11px; color: #6b778c; font-family: 'Space Mono', monospace; min-width: 60px; }
+  .issue-summary { font-size: 13px; color: #172b4d; flex: 1; }
+  .issue-priority { font-size: 14px; }
+  .issue-story-pts {
+    font-size: 12px; color: #6b778c;
+    background: #f4f5f7;
+    border-radius: 12px;
+    padding: 1px 8px;
+    font-weight: 600;
+  }
+  .issue-assignee {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: #fff;
+  }
+  .issue-status {
+    font-size: 11px; font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .status-todo { background: #dfe1e6; color: #42526e; }
+  .status-inprogress { background: #deebff; color: #0052cc; }
+  .status-done { background: #e3fcef; color: #00875a; }
+
+  /* Board View */
+  .jira-board {
+    padding: 16px 20px;
+    display: flex;
+    gap: 12px;
+    min-height: 380px;
+    background: #f4f5f7;
+    overflow-x: auto;
+  }
+  .board-col {
+    min-width: 260px;
+    flex: 1;
+    background: #ebecf0;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .board-col-header {
+    padding: 8px 12px;
+    font-size: 12px; font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #42526e;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .col-count {
+    background: #c1c7d0;
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 11px;
+  }
+  .board-col-body { padding: 4px 8px 8px; }
+  .board-card {
+    background: #fff;
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    box-shadow: 0 1px 3px rgba(9,30,66,0.15);
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: box-shadow 0.15s;
+  }
+  .board-card:hover { box-shadow: 0 4px 12px rgba(9,30,66,0.2); }
+  .board-card.priority-high { border-left-color: #de350b; }
+  .board-card.priority-med { border-left-color: #ffab00; }
+  .board-card.priority-low { border-left-color: #36b37e; }
+  .board-card-summary { font-size: 13px; color: #172b4d; margin-bottom: 8px; line-height: 1.4; }
+  .board-card-footer { display: flex; align-items: center; gap: 6px; }
+  .board-card-key { font-size: 11px; color: #6b778c; font-family: 'Space Mono', monospace; }
+  .board-card-pts {
+    margin-left: auto;
+    background: #f4f5f7;
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 11px; font-weight: 700; color: #6b778c;
+  }
+  .board-card-avatar {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    font-size: 9px; font-weight: 700; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Add issue row */
+  .add-issue-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    color: #6b778c;
+    font-size: 13px;
+    border-bottom: 1px solid #f4f5f7;
+  }
+  .add-issue-row:hover { background: #f4f5f7; color: #0052cc; }
+
+  /* Sprint creation dialog */
+  .jira-dialog {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 8px 40px rgba(9,30,66,0.3);
+    padding: 24px;
+    max-width: 500px;
+    margin: 20px auto;
+    border: 1px solid #dfe1e6;
+  }
+  .dialog-title { font-size: 18px; font-weight: 700; color: #172b4d; margin-bottom: 4px; }
+  .dialog-sub { font-size: 13px; color: #6b778c; margin-bottom: 20px; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 12px; font-weight: 600; color: #42526e; margin-bottom: 6px; display: block; }
+  .form-input {
+    width: 100%;
+    border: 2px solid #dfe1e6;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 14px;
+    color: #172b4d;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-input:focus { border-color: #4c9aff; }
+  .form-row { display: flex; gap: 12px; }
+  .form-row .form-group { flex: 1; }
+  .dialog-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+  /* Burndown chart */
+  .burndown-chart {
+    background: #fff;
+    border: 1px solid #dfe1e6;
+    border-radius: 4px;
+    padding: 16px 20px;
+    margin: 16px 24px;
+  }
+  .chart-title { font-size: 14px; font-weight: 600; color: #172b4d; margin-bottom: 4px; }
+  .chart-sub { font-size: 12px; color: #6b778c; margin-bottom: 16px; }
+  svg.burndown { width: 100%; height: 180px; overflow: visible; }
+
+  /* Sprint report table */
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .report-table th {
+    background: #f4f5f7;
+    color: #6b778c;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 10px 16px;
+    text-align: left;
+    border-bottom: 1px solid #dfe1e6;
+  }
+  .report-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid #f4f5f7;
+    color: #172b4d;
+  }
+  .report-table tr:hover td { background: #f8f9fc; }
+
+  /* Story point badge */
+  .sp-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 24px; height: 24px;
+    background: #e3fcef;
+    color: #00875a;
+    border-radius: 12px;
+    font-size: 12px; font-weight: 700;
+    padding: 0 8px;
+  }
+  .sp-badge.high { background: #ffebe6; color: #de350b; }
+  .sp-badge.med { background: #fffae6; color: #974f0c; }
+
+  /* LECTURE PROSE */
+  .prose { color: var(--text-muted); font-size: 15px; line-height: 1.8; margin-bottom: 20px; }
+  .prose strong { color: var(--text); }
+  .prose code {
+    background: var(--surface3);
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: #79c0ff;
+  }
+
+  /* KEY TERMS */
+  .key-terms {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .term-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .term-name { font-size: 13px; font-weight: 700; color: var(--accent-light); margin-bottom: 4px; }
+  .term-def { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+  /* CEREMONY CARDS */
+  .ceremony-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .ceremony-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .ceremony-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .ceremony-card.plan::before { background: linear-gradient(90deg, #0052cc, #4c9aff); }
+  .ceremony-card.standup::before { background: linear-gradient(90deg, #36b37e, #00c7e6); }
+  .ceremony-card.review::before { background: linear-gradient(90deg, #ffab00, #ff5630); }
+  .ceremony-card.retro::before { background: linear-gradient(90deg, #6554c0, #ff5630); }
+  .ceremony-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+  .ceremony-meta { display: flex; flex-direction: column; gap: 6px; }
+  .ceremony-row { display: flex; gap: 8px; font-size: 12px; color: var(--text-muted); }
+  .ceremony-row strong { color: var(--text); width: 70px; flex-shrink: 0; }
+
+  /* ANTIPATTERN */
+  .antipattern-list { list-style: none; }
+  .antipattern-list li {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px; color: var(--text-muted);
+  }
+  .antipattern-list li:last-child { border-bottom: none; }
+  .ap-icon {
+    width: 22px; height: 22px;
+    background: rgba(222,53,11,0.15);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; flex-shrink: 0; margin-top: 2px;
+  }
+
+  /* USER STORY EXAMPLE */
+  .story-template {
+    background: var(--surface2);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    line-height: 1.8;
+  }
+  .story-template .highlight { color: #ffa657; }
+  .story-template .value { color: var(--accent-light); }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+  /* Fibonacci chips */
+  .fibonacci { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+  .fib-chip {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .fib-chip:hover { border-color: var(--accent-light); color: var(--accent-light); transform: scale(1.1); }
+  .fib-chip.sel { background: var(--accent); border-color: var(--accent); color: #fff; transform: scale(1.15); }
+
+  /* Sprint flow diagram */
+  .sprint-flow {
+    display: flex; align-items: center; gap: 0;
+    overflow-x: auto; padding: 20px 0;
+    margin-bottom: 20px;
+  }
+  .flow-step {
+    display: flex; flex-direction: column; align-items: center;
+    flex-shrink: 0;
+  }
+  .flow-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    text-align: center;
+    min-width: 120px;
+  }
+  .flow-box-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .flow-box-sub { font-size: 11px; color: var(--text-dim); }
+  .flow-arrow {
+    width: 36px; height: 2px;
+    background: var(--border);
+    position: relative;
+    flex-shrink: 0;
+  }
+  .flow-arrow::after {
+    content: '';
+    position: absolute;
+    right: -1px; top: -4px;
+    width: 0; height: 0;
+    border-left: 8px solid var(--border);
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+  }
+
+  /* FOOTER */
+  .lecture-footer {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 32px 40px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .lecture-footer a { color: var(--accent-light); text-decoration: none; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .main { padding: 32px 20px; }
+    .hero { padding: 40px 20px 60px; }
+    .progress-nav { padding: 0 16px; }
+    .jira-board { flex-direction: column; }
+    .board-col { min-width: 100%; }
+  }
+
+  /* Scroll animation */
+  .step-section { opacity: 0; transform: translateY(24px); transition: opacity 0.5s, transform 0.5s; }
+  .step-section.visible { opacity: 1; transform: none; }
+
+  /* ===== OPERATION STEPS ===== */
+  .ops-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .ops-block-header {
+    background: linear-gradient(90deg, rgba(0,82,204,0.25), rgba(0,82,204,0.05));
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .ops-block-header-icon {
+    font-size: 16px;
+  }
+  .ops-block-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-light);
+    letter-spacing: 0.3px;
+  }
+  .ops-list {
+    list-style: none;
+    padding: 8px 0;
+  }
+  .ops-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 10px 20px;
+    border-bottom: 1px solid rgba(48,54,61,0.5);
+    transition: background 0.15s;
+  }
+  .ops-list li:last-child { border-bottom: none; }
+  .ops-list li:hover { background: rgba(255,255,255,0.02); }
+  .ops-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .ops-content {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  .ops-content strong { color: var(--text); }
+  /* Inline click target highlight */
+  .ops-click {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0,82,204,0.18);
+    border: 1px solid rgba(76,154,255,0.35);
+    border-radius: 5px;
+    padding: 1px 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-light);
+    white-space: nowrap;
+  }
+  .ops-click::before { content: '▸ '; font-size: 10px; opacity: 0.7; }
+  /* Input field highlight */
+  .ops-input {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(54,179,126,0.12);
+    border: 1px solid rgba(54,179,126,0.35);
+    border-radius: 5px;
+    padding: 1px 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green);
+    white-space: nowrap;
+    font-family: 'Space Mono', monospace;
+  }
+  .ops-input::before { content: '✏ '; font-size: 10px; opacity: 0.8; }
+  /* Select/dropdown highlight */
+  .ops-select {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255,171,0,0.12);
+    border: 1px solid rgba(255,171,0,0.35);
+    border-radius: 5px;
+    padding: 1px 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--yellow);
+    white-space: nowrap;
+  }
+  .ops-select::before { content: '▾ '; font-size: 10px; opacity: 0.8; }
+  /* Drag highlight */
+  .ops-drag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(101,84,192,0.15);
+    border: 1px solid rgba(101,84,192,0.4);
+    border-radius: 5px;
+    padding: 1px 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #9f8fef;
+    white-space: nowrap;
+  }
+  .ops-drag::before { content: '⠿ '; font-size: 10px; opacity: 0.8; }
+  /* Note inside ops */
+  .ops-note {
+    margin-top: 5px;
+    font-size: 12px;
+    color: var(--text-dim);
+    background: var(--surface2);
+    border-radius: 4px;
+    padding: 4px 10px;
+    border-left: 2px solid var(--border);
+    display: block;
+  }
+  /* Sub-section inside ops */
+  .ops-sub {
+    margin-top: 6px;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .ops-sub-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    font-size: 13px;
+  }
+  .ops-sub-label {
+    color: var(--text-dim);
+    min-width: 100px;
+    flex-shrink: 0;
+    font-size: 12px;
+    padding-top: 1px;
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">
+    <span>📘</span> Jira × スクラム 実践レクチャー
+  </div>
+  <h1 class="hero-title">
+    <span>Jira</span> を使った<br>スクラム開発の進め方
+  </h1>
+  <p class="hero-sub">バックログ管理からスプリント完了まで、実際のJira画面を見ながらスクラムの全ステップを学びます。</p>
+  <div class="hero-meta">
+    <div class="meta-item"><div class="meta-icon">📖</div> 読了 約15分</div>
+    <div class="meta-item"><div class="meta-icon">🏃</div> 実践 2週間</div>
+    <div class="meta-item"><div class="meta-icon">🎯</div> 対象: スクラム・Jira 初心者</div>
+  </div>
+</div>
+
+<!-- PROGRESS NAV -->
+<nav class="progress-nav">
+  <a class="nav-item active" href="#step1"><div class="nav-num">1</div> プロジェクト作成</a>
+  <a class="nav-item" href="#step-epic"><div class="nav-num" style="background:var(--purple);">E</div> Epic定義</a>
+  <a class="nav-item" href="#step2"><div class="nav-num">2</div> バックログ</a>
+  <a class="nav-item" href="#step3"><div class="nav-num">3</div> スプリント作成</a>
+  <a class="nav-item" href="#step4"><div class="nav-num">4</div> スプリント計画</a>
+  <a class="nav-item" href="#step5"><div class="nav-num">5</div> スプリント開始</div></a>
+  <a class="nav-item" href="#step6"><div class="nav-num">6</div> デイリースタンドアップ</a>
+  <a class="nav-item" href="#step7"><div class="nav-num">7</div> バーンダウン</a>
+  <a class="nav-item" href="#step8"><div class="nav-num">8</div> レビュー&ふりかえり</a>
+</nav>
+
+<main class="main">
+
+  <!-- ===== STEP 1 ===== -->
+  <section class="step-section" id="step1">
+    <div class="step-header">
+      <div class="step-num">01</div>
+      <div>
+        <div class="step-title">スクラムプロジェクトの作成</div>
+        <div class="step-desc">Jiraにログイン → テンプレート選択 → プロジェクト作成</div>
+      </div>
+    </div>
+
+    <p class="prose">
+      Jiraにログイン後、<strong>「プロジェクトを作成」</strong> からスクラムテンプレートを選択します。<br>
+      チームが独立して作業プロセスを管理する場合は <strong>「チーム管理対象スクラム」</strong> を選択してください。
+    </p>
+
+    <div class="key-terms">
+      <div class="term-card">
+        <div class="term-name">スクラム</div>
+        <div class="term-def">アジャイルの中で最も普及したフレームワーク。スプリントという短い反復でソフトウェアを継続的に出荷する。</div>
+      </div>
+      <div class="term-card">
+        <div class="term-name">プロダクトバックログ</div>
+        <div class="term-def">チームが将来取り組む可能性のある全作業項目のリスト。プロダクトオーナーが管理・優先順位付けする。</div>
+      </div>
+      <div class="term-card">
+        <div class="term-name">課題 (Issue)</div>
+        <div class="term-def">Jiraにおける作業の単位。ユーザーストーリー、タスク、バグなどが含まれる。</div>
+      </div>
+    </div>
+
+    <!-- Jira Mockup: Project Created + Backlog -->
+    <div class="card">
+      <div class="card-title">🖥 Jira画面 — 空のバックログ（プロジェクト作成直後）</div>
+      <div class="jira-window">
+        <!-- Top Bar -->
+        <div class="jira-topbar">
+          <div class="jira-logo">
+            <div class="jira-logo-icon">J</div>
+            Jira
+          </div>
+          <div class="jira-topnav">
+            <div class="jira-topnav-item">プロジェクト</div>
+            <div class="jira-topnav-item">あなたの作業</div>
+          </div>
+          <div class="jira-search">🔍 検索</div>
+        </div>
+        <!-- Sidebar + Content -->
+        <div class="jira-body">
+          <div class="jira-sidebar">
+            <div class="jira-project-header">
+              <div class="jira-proj-icon">EC</div>
+              <div>
+                <div class="jira-proj-name">ECサイト開発</div>
+                <div class="jira-proj-type">スクラム</div>
+              </div>
+            </div>
+            <div class="jira-nav-item"><div class="jira-nav-icon">📋</div>ボード</div>
+            <div class="jira-nav-item active"><div class="jira-nav-icon">📝</div>バックログ</div>
+            <div class="jira-nav-item"><div class="jira-nav-icon">📊</div>レポート</div>
+            <div class="jira-nav-item"><div class="jira-nav-icon">⚙️</div>プロジェクト設定</div>
+          </div>
+          <div class="jira-content">
+            <div class="jira-backlog-header">
+              <div>
+                <div class="jira-breadcrumb">プロジェクト / ECサイト開発</div>
+                <div class="jira-page-title">📝 バックログ</div>
+              </div>
+              <button class="jira-btn jira-btn-primary">スプリントを作成</button>
+            </div>
+            <div class="jira-toolbar">
+              <button class="jira-btn jira-btn-secondary">エピック</button>
+              <button class="jira-btn jira-btn-secondary">バージョン</button>
+            </div>
+            <!-- Empty backlog state -->
+            <div style="text-align:center; padding:48px; color:#6b778c;">
+              <div style="font-size:40px; margin-bottom:12px;">📋</div>
+              <div style="font-size:16px; font-weight:600; color:#172b4d; margin-bottom:8px;">バックログは空です</div>
+              <div style="font-size:13px; margin-bottom:20px;">ユーザーストーリーやタスクを追加して始めましょう</div>
+              <button class="jira-btn jira-btn-primary">+ 課題を作成</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPERATION STEPS: Step 1 -->
+    <div class="ops-block">
+      <div class="ops-block-header">
+        <div class="ops-block-header-icon">🖱</div>
+        <div class="ops-block-title">【操作手順】 スクラムプロジェクトを新規作成する</div>
+      </div>
+      <ul class="ops-list">
+        <li>
+          <div class="ops-num">1</div>
+          <div class="ops-content">
+            Jira (<code style="font-size:12px;color:#79c0ff;">https://jira.atlassian.com</code>) にログインし、左上の <span class="ops-click">Jira ロゴ</span> または <span class="ops-click">プロジェクト</span> メニューをクリックする
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">2</div>
+          <div class="ops-content">
+            表示されたドロップダウンから <span class="ops-click">プロジェクトを作成</span> をクリックする
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">3</div>
+          <div class="ops-content">
+            テンプレート選択画面で <span class="ops-click">スクラム</span> カードを選択し、右下の <span class="ops-click">テンプレートを使用</span> をクリックする
+            <span class="ops-note">チームが独立して作業を管理する場合は「チーム管理対象」を選択してください</span>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">4</div>
+          <div class="ops-content">
+            プロジェクト設定フォームに入力する
+            <div class="ops-sub">
+              <div class="ops-sub-row"><span class="ops-sub-label">プロジェクト名</span><span class="ops-input">ECサイト開発</span></div>
+              <div class="ops-sub-row"><span class="ops-sub-label">プロジェクトキー</span><span class="ops-input">EC</span>（自動生成されるが変更可能）</div>
+              <div class="ops-sub-row"><span class="ops-sub-label">アクセス</span><span class="ops-select">プライベート / チーム</span> を選択</div>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">5</div>
+          <div class="ops-content">
+            右下の <span class="ops-click">プロジェクトを作成</span> をクリックする → 空のバックログ画面が表示されれば完了
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ===== STEP EPIC ===== -->
+  <section class="step-section" id="step-epic">
+    <div class="step-header">
+      <div class="step-num" style="background:linear-gradient(135deg, var(--purple), #4a3f9e);">E</div>
+      <div>
+        <div class="step-title">Epicの定義</div>
+        <div class="step-desc">バックログ登録前に大きな機能単位をまとめておく</div>
+      </div>
+    </div>
+
+    <p class="prose">
+      <strong>Epic（エピック）</strong>とは、複数のユーザーストーリーをまとめた大きな機能単位です。
+      バックログにストーリーを登録する前にEpicを定義しておくと、ストーリーの整理・優先度付けがしやすくなります。
+    </p>
+
+    <div class="key-terms">
+      <div class="term-card">
+        <div class="term-name">Epic</div>
+        <div class="term-def">1〜複数スプリントにまたがる大きな機能単位。ストーリーの親として機能する。</div>
+      </div>
+      <div class="term-card">
+        <div class="term-name">親フィールド</div>
+        <div class="term-def">ストーリーの詳細パネルにある「親」フィールドでEpicとひもづける。</div>
+      </div>
+      <div class="term-card">
+        <div class="term-name">ロードマップ</div>
+        <div class="term-def">EpicをタイムラインでJiraのロードマップビューから管理・確認できる。</div>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <p>📌 <strong>ECサイト開発のEpic例</strong><br><br>
+      <strong>Epic 1：ユーザー認証機能</strong> → EC-1（アカウント作成・購入履歴）<br>
+      <strong>Epic 2：カート・決済機能</strong> → EC-2（ゲスト決済）、EC-4（モバイル表示バグ）<br>
+      <strong>Epic 3：管理者機能</strong> → EC-3（在庫管理）<br>
+      <strong>Epic 4：外部連携</strong> → EC-5（決済APIインテグレーション）
+      </p>
+    </div>
+
+    <!-- OPERATION STEPS: Epic -->
+    <div class="ops-block">
+      <div class="ops-block-header">
+        <div class="ops-block-header-icon">🖱</div>
+        <div class="ops-block-title">【操作手順①】 タイムラインからEpicを作成する（推奨）</div>
+      </div>
+      <ul class="ops-list">
+        <li>
+          <div class="ops-num">1</div>
+          <div class="ops-content">
+            左サイドバーまたは上部ナビの <span class="ops-click">タイムライン</span> タブをクリックする
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">2</div>
+          <div class="ops-content">
+            画面左側に表示される <span class="ops-click">+ エピックを作成</span> をクリックする
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">3</div>
+          <div class="ops-content">
+            Epic名を入力して <strong>Enter</strong> で確定する
+            <div class="ops-sub">
+              <div class="ops-sub-row"><span class="ops-sub-label">Epic 1</span><span class="ops-input">ユーザー認証機能</span></div>
+              <div class="ops-sub-row"><span class="ops-sub-label">Epic 2</span><span class="ops-input">カート・決済機能</span></div>
+              <div class="ops-sub-row"><span class="ops-sub-label">Epic 3</span><span class="ops-input">管理者機能</span></div>
+              <div class="ops-sub-row"><span class="ops-sub-label">Epic 4</span><span class="ops-input">外部連携</span></div>
+            </div>
+            <span class="ops-note">💡 Epicは1スプリント以上にまたがる大きな単位です。細かすぎず、大まかな機能グループで作成してください</span>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">4</div>
+          <div class="ops-content">
+            同様に残りのEpicをすべて作成する
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">5</div>
+          <div class="ops-content">
+            作成後の確認：タイムライン画面でEpicが<strong>横棒</strong>として表示されていれば作成完了
+            <span class="ops-note">✅ 右パネルの「epic を追加」リンクをクリックしたとき、作成したEpic名が選択肢に表示されれば正しく登録されています</span>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">6</div>
+          <div class="ops-content">
+            すべてのEpicを作成したら <span class="ops-click">バックログ</span> タブに戻る
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="ops-block">
+      <div class="ops-block-header">
+        <div class="ops-block-header-icon">🖱</div>
+        <div class="ops-block-title">【操作手順①'】 バックログからEpicを作成する（代替）</div>
+      </div>
+      <ul class="ops-list">
+        <li>
+          <div class="ops-num">1</div>
+          <div class="ops-content">
+            <span class="ops-click">バックログ</span> タブを開く
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">2</div>
+          <div class="ops-content">
+            画面上部の <span class="ops-click">+ 作成</span> ボタンをクリックする
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">3</div>
+          <div class="ops-content">
+            課題タイプのドロップダウンで <span class="ops-select">Epic</span> を選択する
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">4</div>
+          <div class="ops-content">
+            タイトルを入力して <span class="ops-click">作成</span> をクリックする
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="ops-block">
+      <div class="ops-block-header">
+        <div class="ops-block-header-icon">🖱</div>
+        <div class="ops-block-title">【操作手順②】 ストーリーにEpicをひもづける</div>
+      </div>
+      <ul class="ops-list">
+        <li>
+          <div class="ops-num">1</div>
+          <div class="ops-content">
+            バックログでひもづけたいストーリー（例：EC-1）の行をクリックして右パネルを開く
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">2</div>
+          <div class="ops-content">
+            右パネル上部の <span class="ops-click">epic を追加</span> リンクをクリックする
+            <span class="ops-note">⚠️ 「epic を追加」は右パネル最上部、課題キー（例: EC-1）の左隣に表示されています</span>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">3</div>
+          <div class="ops-content">
+            ドロップダウンから対応するEpicを選択してひもづける
+            <div class="ops-sub">
+              <div class="ops-sub-row"><span class="ops-sub-label">EC-1</span><span class="ops-select">ユーザー認証機能</span> を選択</div>
+              <div class="ops-sub-row"><span class="ops-sub-label">EC-2, EC-4</span><span class="ops-select">カート・決済機能</span> を選択</div>
+              <div class="ops-sub-row"><span class="ops-sub-label">EC-3</span><span class="ops-select">管理者機能</span> を選択</div>
+              <div class="ops-sub-row"><span class="ops-sub-label">EC-5</span><span class="ops-select">外部連携</span> を選択</div>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <section class="step-section" id="step2">
+    <div class="step-header">
+      <div class="step-num">02</div>
+      <div>
+        <div class="step-title">バックログでのユーザーストーリー作成</div>
+        <div class="step-desc">ユーザー視点で作業を記述し、優先順位を付ける</div>
+      </div>
+    </div>
+
+    <p class="prose">
+      <strong>ユーザーストーリー</strong>とは、作業項目をユーザーの視点から技術的用語を使わずに記述したものです。
+      以下のテンプレートを使うと書きやすくなります。
+    </p>
+
+    <div class="story-template">
+      <span class="highlight">「{ユーザーの種類}</span> である私は、<br>
+      　<span class="value">{達成したいゴール}</span> を行って<br>
+      　<span class="highlight">{得られるメリット}</span> を実現したい。」
+    </div>
+
+    <div class="info-box">
+      <p>📌 <strong>サンプル — ECサイトの場合</strong><br>
+      「<strong>顧客</strong>である私は、<strong>アカウントを作成</strong>して、<strong>過去の購入履歴を確認</strong>したい。」</p>
+    </div>
+
+    <!-- Jira Mockup: Backlog with Issues -->
+    <div class="card">
+      <div class="card-title">🖥 Jira画面 — バックログにストーリーを追加した状態</div>
+      <div class="jira-window">
+        <div class="jira-topbar">
+          <div class="jira-logo"><div class="jira-logo-icon">J</div>Jira</div>
+          <div class="jira-topnav">
+            <div class="jira-topnav-item">プロジェクト</div>
+          </div>
+          <div class="jira-search">🔍 検索</div>
+        </div>
+        <div class="jira-body">
+          <div class="jira-sidebar">
+            <div class="jira-project-header">
+              <div class="jira-proj-icon">EC</div>
+              <div><div class="jira-proj-name">ECサイト開発</div><div class="jira-proj-type">スクラム</div></div>
+            </div>
+            <div class="jira-nav-item"><div class="jira-nav-icon">📋</div>ボード</div>
+            <div class="jira-nav-item active"><div class="jira-nav-icon">📝</div>バックログ</div>
+            <div class="jira-nav-item"><div class="jira-nav-icon">📊</div>レポート</div>
+          </div>
+          <div class="jira-content">
+            <div class="jira-backlog-header">
+              <div>
+                <div class="jira-breadcrumb">プロジェクト / ECサイト開発</div>
+                <div class="jira-page-title">📝 バックログ</div>
+              </div>
+              <button class="jira-btn jira-btn-primary">スプリントを作成</button>
+            </div>
+            <!-- Sprint block -->
+            <div class="sprint-block" style="margin-top:16px;">
+              <div class="sprint-header">
+                <span class="sprint-chevron">▼</span>
+                <span class="sprint-name">バックログ</span>
+                <span class="sprint-meta">5 課題</span>
+                <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+                </div>
+              </div>
+              <div class="issue-row">
+                <div class="issue-type story">S</div>
+                <span class="issue-key">EC-1</span>
+                <span class="issue-summary">顧客としてアカウントを作成し、過去の購入履歴を確認したい</span>
+                <span class="issue-priority">🔴</span>
+                <span class="issue-story-pts">—</span>
+                <div class="issue-assignee" style="background:#0052cc;">田</div>
+                <span class="issue-status status-todo">Todo</span>
+              </div>
+              <div class="issue-row">
+                <div class="issue-type story">S</div>
+                <span class="issue-key">EC-2</span>
+                <span class="issue-summary">ゲストとして商品をカートに追加し、ログインなしで決済を完了したい</span>
+                <span class="issue-priority">🔴</span>
+                <span class="issue-story-pts">—</span>
+                <div class="issue-assignee" style="background:#36b37e;">佐</div>
+                <span class="issue-status status-todo">Todo</span>
+              </div>
+              <div class="issue-row">
+                <div class="issue-type story">S</div>
+                <span class="issue-key">EC-3</span>
+                <span class="issue-summary">管理者として在庫数を一括更新し、欠品を防止したい</span>
+                <span class="issue-priority">🟡</span>
+                <span class="issue-story-pts">—</span>
+                <div class="issue-assignee" style="background:#6554c0;">鈴</div>
+                <span class="issue-status status-todo">Todo</span>
+              </div>
+              <div class="issue-row">
+                <div class="issue-type bug">B</div>
+                <span class="issue-key">EC-4</span>
+                <span class="issue-summary">モバイル表示でカートボタンが重なって押せない</span>
+                <span class="issue-priority">🔴</span>
+                <span class="issue-story-pts">—</span>
+                <div class="issue-assignee" style="background:#ff5630;">伊</div>
+                <span class="issue-status status-todo">Todo</span>
+              </div>
+              <div class="issue-row">
+                <div class="issue-type task">T</div>
+                <span class="issue-key">EC-5</span>
+                <span class="issue-summary">決済APIのドキュメントを読んでインテグレーション方針をまとめる</span>
+                <span class="issue-priority">🟢</span>
+                <span class="issue-story-pts">—</span>
+                <div class="issue-assignee" style="background:#00b8d9;">渡</div>
+                <span class="issue-status status-todo">Todo</span>
+              </div>
+              <div class="add-issue-row">
+                <span>＋</span> 課題を作成
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-box">
+      <div class="tip-icon">💡</div>
+      <div class="tip-text"><strong>プロのヒント:</strong> バックログのストーリーは<strong>ドラッグ＆ドロップ</strong>で優先順位を並べ替えられます。上位のストーリーが次のスプリントで取り組む候補になります。</div>
+    </div>
+
+    <!-- OPERATION STEPS: Step 2 -->
+    <div class="ops-block">
+      <div class="ops-block-header">
+        <div class="ops-block-header-icon">🖱</div>
+        <div class="ops-block-title">【操作手順】 ユーザーストーリーをバックログに追加する</div>
+      </div>
+      <ul class="ops-list">
+        <li>
+          <div class="ops-num">1</div>
+          <div class="ops-content">
+            左サイドバーの <span class="ops-click">バックログ</span> をクリックしてバックログ画面を開く
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">2</div>
+          <div class="ops-content">
+            バックログ一覧の最下部にある <span class="ops-click">+ 課題を作成</span> をクリックする
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">3</div>
+          <div class="ops-content">
+            テキスト入力フィールドにユーザーストーリーのタイトルを入力する<br>
+            <span class="ops-input">顧客としてアカウントを作成し、過去の購入履歴を確認したい</span>
+            <span class="ops-note">💡 Enterキーで確定し、続けて次のストーリーを連続入力できます</span>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">4</div>
+          <div class="ops-content">
+            作成した課題の行をクリックして右側の詳細パネルを開き、各フィールドを設定する
+            <div class="ops-sub">
+              <div class="ops-sub-row">
+                <span class="ops-sub-label">課題タイプ</span>
+                詳細パネル上部、課題キー（例: EC-1）の<strong>左隣にある小さいアイコン</strong>をクリック → <span class="ops-select">ストーリー</span> を選択
+                <br><span class="ops-note">⚠️ パネル上部の「作業タイプ タスク を改善」ボタンはAI機能のメニューです。タイプ変更には使いません</span>
+              </div>
+              <div class="ops-sub-row">
+                <span class="ops-sub-label">優先度</span>
+                「詳細」セクションに優先度が表示されていない場合は、「詳細」右上の <span class="ops-click">⚙（スライダーアイコン）</span> をクリック → 「優先度」をオンにして追加 → <span class="ops-select">最高 / 高 / 中 / 低</span> から選択
+              </div>
+              <div class="ops-sub-row">
+                <span class="ops-sub-label">担当者</span>
+                「詳細」セクション内の <span class="ops-click">自分に割り当てる</span> をクリック（または「未割り当て」をクリックしてメンバー一覧から選択）
+              </div>
+              <div class="ops-sub-row">
+                <span class="ops-sub-label">説明</span>
+                「説明」セクションの <span class="ops-click">説明を編集</span> をクリック → テキストエリアに受け入れ条件・背景を記入
+              </div>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">5</div>
+          <div class="ops-content">
+            優先度順に並べるため、課題行左端の <span class="ops-drag">⠿ ドラッグハンドル</span> をつかんで上下に移動する
+            <span class="ops-note">一番上が最優先。次のスプリント計画で最初に取り組む候補になります</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- NOTE: ユーザーストーリーの粒度とEpic/Story/Subtaskの使い分け -->
+    <div class="card">
+      <div class="card-title">📌 注記　ユーザーストーリーの粒度と Epic / Story / Subtask の使い分け</div>
+
+      <div class="info-box">
+        <p>例えば「顧客としてアカウントを作成し、過去の購入履歴を確認したい」は<strong>1つのストーリーに2つの機能が混在</strong>しており、このままでは実装できません。<strong>ストーリーが粗すぎる場合は分割が必要</strong>です。</p>
+      </div>
+
+      <div style="margin: 16px 0;">
+        <div class="card-title">🏗 正しい階層構造（例：ユーザー認証機能）</div>
+        <div style="background:var(--surface2); border-radius:8px; padding:16px 20px; font-family:'Space Mono', monospace; font-size:12px; color:var(--text-muted); line-height:2;">
+          <span style="color:var(--purple);">Epic</span>：ユーザー認証機能<br>
+          　├─ <span style="color:var(--accent-light);">Story</span>：アカウント新規登録<br>
+          　│　　└─ <span style="color:var(--text-dim);">Subtask</span>：メール確認機能実装<br>
+          　│　　└─ <span style="color:var(--text-dim);">Subtask</span>：バリデーション実装<br>
+          　├─ <span style="color:var(--accent-light);">Story</span>：ログイン／ログアウト<br>
+          　├─ <span style="color:var(--accent-light);">Story</span>：パスワードリセット<br>
+          　├─ <span style="color:var(--accent-light);">Story</span>：購入履歴の一覧表示<br>
+          　└─ <span style="color:var(--accent-light);">Story</span>：購入履歴の詳細表示
+        </div>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <table style="width:100%; border-collapse:collapse; font-size:13px; color:var(--text-muted);">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);">
+              <th style="text-align:left; padding:8px 12px; color:var(--text-dim); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">種別</th>
+              <th style="text-align:left; padding:8px 12px; color:var(--text-dim); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">誰が価値を受けるか</th>
+              <th style="text-align:left; padding:8px 12px; color:var(--text-dim); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">受け入れ条件</th>
+              <th style="text-align:left; padding:8px 12px; color:var(--text-dim); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">スプリント登録</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:8px 12px; color:var(--purple); font-weight:700;">Epic</td>
+              <td style="padding:8px 12px;">ユーザー・ビジネス</td>
+              <td style="padding:8px 12px;">なし</td>
+              <td style="padding:8px 12px;">しない（複数スプリントにまたがる）</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:8px 12px; color:var(--accent-light); font-weight:700;">Story</td>
+              <td style="padding:8px 12px;">ユーザーが直接価値を受ける</td>
+              <td style="padding:8px 12px;">あり</td>
+              <td style="padding:8px 12px;">直接登録する</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 12px; color:var(--text-dim); font-weight:700;">Subtask</td>
+              <td style="padding:8px 12px;">開発者の作業分担</td>
+              <td style="padding:8px 12px;">基本なし</td>
+              <td style="padding:8px 12px;">親ストーリーに付属</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tip-box">
+        <div class="tip-icon">💡</div>
+        <div class="tip-text">
+          <strong>ストーリー分割の判断基準</strong><br>
+          「1スプリント（2週間）以内に1人で完了できるか？」を基準にしてください。できない場合はストーリーをさらに分割します。サブタスクはエンジニアが実装時に作業を分担するために使い、ユーザーへの価値単位では分割しません。
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTE: Prefix Codeについて -->
+    <div class="card">
+      <div class="card-title">📌 注記　Epic / Story / Subtask に種別ごとのPrefix Codeをつけたい場合</div>
+
+      <div class="info-box">
+        <p>Jira標準機能では、Issue Keyは <strong>`[プロジェクトキー]-[連番]`</strong>（例：EC-1）の形式で固定されており、課題タイプごとに異なるPrefixを<strong>自動付与することはできません</strong>。</p>
+      </div>
+
+      <div style="margin: 16px 0;">
+        <div class="card-title">🔧 代替手段</div>
+        <table style="width:100%; border-collapse:collapse; font-size:13px; color:var(--text-muted);">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);">
+              <th style="text-align:left; padding:8px 12px; color:var(--text-dim); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">方法</th>
+              <th style="text-align:left; padding:8px 12px; color:var(--text-dim); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">内容</th>
+              <th style="text-align:left; padding:8px 12px; color:var(--text-dim); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">難易度</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:8px 12px; font-weight:700; color:var(--text);">命名規則で統一</td>
+              <td style="padding:8px 12px;">タイトルの先頭に <code style="background:var(--surface3);padding:1px 6px;border-radius:3px;font-size:12px;">[EP]</code> <code style="background:var(--surface3);padding:1px 6px;border-radius:3px;font-size:12px;">[ST]</code> <code style="background:var(--surface3);padding:1px 6px;border-radius:3px;font-size:12px;">[SUB]</code> を手動でつける</td>
+              <td style="padding:8px 12px;">★ 簡単</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:8px 12px; font-weight:700; color:var(--text);">ラベルで区別</td>
+              <td style="padding:8px 12px;"><code style="background:var(--surface3);padding:1px 6px;border-radius:3px;font-size:12px;">epic</code> <code style="background:var(--surface3);padding:1px 6px;border-radius:3px;font-size:12px;">story</code> <code style="background:var(--surface3);padding:1px 6px;border-radius:3px;font-size:12px;">subtask</code> のラベルを付けてフィルタリング</td>
+              <td style="padding:8px 12px;">★ 簡単</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:8px 12px; font-weight:700; color:var(--text);">Jira自動化</td>
+              <td style="padding:8px 12px;">課題作成時に自動でタイトルにPrefixを追加するルールを設定</td>
+              <td style="padding:8px 12px;">★★ 中程度</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 12px; font-weight:700; color:var(--text);">サードパーティ製アプリ</td>
+              <td style="padding:8px 12px;">Atlassian Marketplaceのアプリで拡張</td>
+              <td style="padding:8px 12px;">★★★ 複雑</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tip-box">
+        <div class="tip-icon">💡</div>
+        <div class="tip-text">
+          <strong>おすすめ：命名規則 ＋ ラベルの組み合わせ</strong><br>
+          タイトル先頭に <code style="background:var(--surface3);padding:1px 5px;border-radius:3px;font-size:11px;">[EP]</code> <code style="background:var(--surface3);padding:1px 5px;border-radius:3px;font-size:11px;">[ST]</code> を付けつつ、ラベルも設定しておくとバックログのフィルタで種別ごとに絞り込めます。最もシンプルで運用コストが低い方法です。
+        </div>
+      </div>
+
+      <div style="margin-top: 16px;">
+        <div class="card-title">✅ 現実的なおすすめ　— 命名規則 ＋ ラベルの具体例</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="background:var(--surface2); border-radius:8px; padding:12px 16px; border-left:3px solid var(--purple);">
+            <div style="font-size:11px; font-weight:700; color:var(--purple); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">Epic</div>
+            <div style="font-size:13px; color:var(--text-muted);">
+              タイトル：<code style="background:var(--surface3);padding:1px 6px;border-radius:3px;font-size:12px;">[EP] ユーザー認証機能</code><br>
+              ラベル：<code style="background:var(--surface3);padding:1px 6px;border-radius:3px;font-size:12px;">epic</code>
+            </div>
+          </div>
+          <div style="background:var(--surface2); border-radius:8px; padding:12px 16px; border-left:3px solid var(--accent-light);">
+            <div style="font-size:11px; font-weight:700; color:var(--accent-light); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">Story</div>
+            <div style="font-size:13px; color:var(--text-muted);">
+              タイトル：<code style="background:var(--surface3);padding:1px 6px;border-radius:3px;font-size:12px;">[ST] アカウント新規登録</code><br>
+              ラベル：<code style="background:var(--surface3);padding:1px 6px;border-radius:3px;font-size:12px;">story</code>
+            </div>
+          </div>
+          <div style="background:var(--surface2); border-radius:8px; padding:12px 16px; border-left:3px solid var(--text-dim);">
+            <div style="font-size:11px; font-weight:700; color:var(--text-dim); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">Subtask</div>
+            <div style="font-size:13px; color:var(--text-muted);">
+              タイトル：<code style="background:var(--surface3);padding:1px 6px;border-radius:3px;font-size:12px;">[SUB] メール確認機能実装</code><br>
+              ラベル：<code style="background:var(--surface3);padding:1px 6px;border-radius:3px;font-size:12px;">subtask</code>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:10px; font-size:13px; color:var(--text-muted);">
+          バックログ画面の <strong style="color:var(--text);">フィルター</strong> → <strong style="color:var(--text);">ラベル</strong> で <code style="background:var(--surface3);padding:1px 6px;border-radius:3px;font-size:12px;">epic</code> / <code style="background:var(--surface3);padding:1px 6px;border-radius:3px;font-size:12px;">story</code> を選択すると種別ごとに絞り込めます。
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ===== STEP 3 ===== -->
+  <section class="step-section" id="step3">
+    <div class="step-header">
+      <div class="step-num">03</div>
+      <div>
+        <div class="step-title">スプリントの作成</div>
+        <div class="step-desc">作業の反復サイクルを設定する（推奨: 2週間）</div>
+      </div>
+    </div>
+
+    <p class="prose">
+      <strong>スプリント</strong>とは、チームが一定期間（1〜4週間）に完成させる作業のセットです。
+      期間が固定されることで、見積もり精度が上がり、チームのベロシティ（速度）が把握できるようになります。
+    </p>
+
+    <div class="key-terms">
+      <div class="term-card">
+        <div class="term-name">スプリント期間</div>
+        <div class="term-def">1週間 / 2週間（推奨）/ 4週間 から選択。一度決めたら変更しない。</div>
+      </div>
+      <div class="term-card">
+        <div class="term-name">ベロシティ</div>
+        <div class="term-def">チームが1スプリントで完了できるストーリーポイントの平均値。計画の基準になる。</div>
+      </div>
+      <div class="term-card">
+        <div class="term-name">スプリントバックログ</div>
+        <div class="term-def">今スプリントで完了することを約束したストーリーと完了計画の一覧。</div>
+      </div>
+    </div>
+
+    <!-- Sprint Creation Dialog Mockup -->
+    <div class="card">
+      <div class="card-title">🖥 Jira画面 — スプリント作成ダイアログ</div>
+      <div class="jira-window">
+        <div class="jira-topbar">
+          <div class="jira-logo"><div class="jira-logo-icon">J</div>Jira</div>
+          <div class="jira-search">🔍 検索</div>
+        </div>
+        <div style="background:#f4f5f7; padding:24px;">
+          <div class="jira-dialog">
+            <div class="dialog-title">🏃 スプリントを作成</div>
+            <div class="dialog-sub">スプリントの名前と期間を設定してください</div>
+            <div class="form-group">
+              <label class="form-label">スプリント名</label>
+              <input class="form-input" type="text" value="ECサイト開発 Sprint 1 — 認証・カート機能">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">スプリント期間</label>
+                <select class="form-input">
+                  <option>2週間 ✓</option>
+                  <option>1週間</option>
+                  <option>4週間</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">開始日</label>
+                <input class="form-input" type="text" value="2026/03/25（水）">
+              </div>
+              <div class="form-group">
+                <label class="form-label">終了日</label>
+                <input class="form-input" type="text" value="2026/04/07（火）">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">スプリントの目標</label>
+              <input class="form-input" type="text" value="ユーザー認証とカート機能の基本実装を完了する">
+            </div>
+            <div class="dialog-footer">
+              <button class="jira-btn jira-btn-secondary">キャンセル</button>
+              <button class="jira-btn jira-btn-primary">スプリントを作成</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPERATION STEPS: Step 3 -->
+    <div class="ops-block">
+      <div class="ops-block-header">
+        <div class="ops-block-header-icon">🖱</div>
+        <div class="ops-block-title">【操作手順】 スプリントを作成する</div>
+      </div>
+      <ul class="ops-list">
+        <li>
+          <div class="ops-num">1</div>
+          <div class="ops-content">
+            左サイドバーの <span class="ops-click">バックログ</span> をクリックして、バックログ画面を開く
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">2</div>
+          <div class="ops-content">
+            バックログ画面右上の <span class="ops-click">スプリントを作成</span> ボタンをクリックする
+            <span class="ops-note">スプリントブロック（折りたたみ可能なセクション）がバックログの上に追加されます</span>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">3</div>
+          <div class="ops-content">
+            作成されたスプリントブロックの右端にある <span class="ops-click">… その他の操作</span> → <span class="ops-click">スプリントを編集</span> をクリックして、以下の項目を入力する
+            <div class="ops-sub">
+              <div class="ops-sub-row"><span class="ops-sub-label">スプリント名</span><span class="ops-input">ECサイト開発 Sprint 1 — 認証・カート機能</span></div>
+              <div class="ops-sub-row"><span class="ops-sub-label">期間</span><span class="ops-select">2週間</span> を選択</div>
+              <div class="ops-sub-row"><span class="ops-sub-label">開始日</span><span class="ops-input">2026/03/25</span> を入力（カレンダーから選択も可）</div>
+              <div class="ops-sub-row"><span class="ops-sub-label">終了日</span>期間選択で<strong>自動入力</strong>される</div>
+              <div class="ops-sub-row"><span class="ops-sub-label">スプリント目標</span><span class="ops-input">ユーザー認証とカート機能の基本実装を完了する</span></div>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">4</div>
+          <div class="ops-content">
+            <span class="ops-click">更新</span> ボタンをクリックして保存する
+          </div>
+        </li>
+
+      </ul>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ===== STEP 4 ===== -->
+  <section class="step-section" id="step4">
+    <div class="step-header">
+      <div class="step-num">04</div>
+      <div>
+        <div class="step-title">スプリント計画ミーティングの開催</div>
+        <div class="step-desc">ストーリーポイントを見積もり、スプリントバックログを確定する</div>
+      </div>
+    </div>
+
+    <div class="ceremony-grid">
+      <div class="ceremony-card plan">
+        <div class="ceremony-title">📅 スプリント計画</div>
+        <div class="ceremony-meta">
+          <div class="ceremony-row"><strong>出席者</strong>開発チーム、スクラムマスター、PO</div>
+          <div class="ceremony-row"><strong>タイミング</strong>スプリント開始時</div>
+          <div class="ceremony-row"><strong>所要時間</strong>1週間 = 2時間 / 2週間 = 4時間</div>
+          <div class="ceremony-row"><strong>目的</strong>スプリントゴールとバックログの合意</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="prose">
+      <strong>ストーリーポイント</strong>は作業の<em>相対的な複雑さ</em>を表す単位です。
+      フィボナッチ数列に近い値を使い、時間ではなく難易度で見積もります。
+    </p>
+
+    <div class="card">
+      <div class="card-title">📊 ストーリーポイントの目安（クリックで選択）</div>
+      <div class="fibonacci" id="fibChips">
+        <div class="fib-chip" onclick="selectFib(this,'1')">1</div>
+        <div class="fib-chip sel" onclick="selectFib(this,'2')">2</div>
+        <div class="fib-chip" onclick="selectFib(this,'3')">3</div>
+        <div class="fib-chip" onclick="selectFib(this,'5')">5</div>
+        <div class="fib-chip" onclick="selectFib(this,'8')">8</div>
+        <div class="fib-chip" onclick="selectFib(this,'13')">13</div>
+        <div class="fib-chip" onclick="selectFib(this,'20')">20</div>
+        <div class="fib-chip" onclick="selectFib(this,'40')">40</div>
+      </div>
+      <div id="fibDesc" style="font-size:13px; color:#6b778c; margin-top:8px;">
+        2pt — 小さな変更。既知の実装パターン。半日〜1日程度。
+      </div>
+    </div>
+
+    <!-- Backlog with Story Points -->
+    <div class="card">
+      <div class="card-title">🖥 Jira画面 — ストーリーポイントを付けたスプリントバックログ</div>
+      <div class="jira-window">
+        <div class="jira-topbar">
+          <div class="jira-logo"><div class="jira-logo-icon">J</div>Jira</div>
+          <div class="jira-search">🔍 検索</div>
+        </div>
+        <div class="jira-body">
+          <div class="jira-sidebar">
+            <div class="jira-project-header">
+              <div class="jira-proj-icon">EC</div>
+              <div><div class="jira-proj-name">ECサイト開発</div><div class="jira-proj-type">スクラム</div></div>
+            </div>
+            <div class="jira-nav-item"><div class="jira-nav-icon">📋</div>ボード</div>
+            <div class="jira-nav-item active"><div class="jira-nav-icon">📝</div>バックログ</div>
+            <div class="jira-nav-item"><div class="jira-nav-icon">📊</div>レポート</div>
+          </div>
+          <div class="jira-content">
+            <div class="jira-backlog-header">
+              <div><div class="jira-breadcrumb">プロジェクト / ECサイト開発</div>
+              <div class="jira-page-title">📝 バックログ</div></div>
+            </div>
+            <!-- Sprint block -->
+            <div class="sprint-block" style="margin-top:12px;">
+              <div class="sprint-header">
+                <span class="sprint-chevron">▼</span>
+                <span class="sprint-name">Sprint 1 — 認証・カート機能</span>
+                <span class="sprint-meta">2026/03/25 – 2026/04/07</span>
+                <span class="sprint-count">4 課題 / 18pt</span>
+                <div class="sprint-actions">
+                  <button class="sprint-action-btn edit-sprint-btn">編集</button>
+                  <button class="sprint-action-btn start-sprint-btn">スプリントを開始</button>
+                </div>
+              </div>
+              <div class="issue-row">
+                <div class="issue-type story">S</div>
+                <span class="issue-key">EC-1</span>
+                <span class="issue-summary">顧客としてアカウントを作成し、過去の購入履歴を確認したい</span>
+                <span class="issue-priority">🔴</span>
+                <span class="issue-story-pts">5</span>
+                <div class="issue-assignee" style="background:#0052cc;">田</div>
+                <span class="issue-status status-todo">Todo</span>
+              </div>
+              <div class="issue-row">
+                <div class="issue-type story">S</div>
+                <span class="issue-key">EC-2</span>
+                <span class="issue-summary">ゲストとして商品をカートに追加し、ログインなしで決済を完了したい</span>
+                <span class="issue-priority">🔴</span>
+                <span class="issue-story-pts">8</span>
+                <div class="issue-assignee" style="background:#36b37e;">佐</div>
+                <span class="issue-status status-todo">Todo</span>
+              </div>
+              <div class="issue-row">
+                <div class="issue-type bug">B</div>
+                <span class="issue-key">EC-4</span>
+                <span class="issue-summary">モバイル表示でカートボタンが重なって押せない</span>
+                <span class="issue-priority">🔴</span>
+                <span class="issue-story-pts">3</span>
+                <div class="issue-assignee" style="background:#ff5630;">伊</div>
+                <span class="issue-status status-todo">Todo</span>
+              </div>
+              <div class="issue-row">
+                <div class="issue-type task">T</div>
+                <span class="issue-key">EC-5</span>
+                <span class="issue-summary">決済APIのドキュメントを読んでインテグレーション方針をまとめる</span>
+                <span class="issue-priority">🟡</span>
+                <span class="issue-story-pts">2</span>
+                <div class="issue-assignee" style="background:#00b8d9;">渡</div>
+                <span class="issue-status status-todo">Todo</span>
+              </div>
+            </div>
+            <!-- Backlog (remaining) -->
+            <div class="sprint-block">
+              <div class="sprint-header">
+                <span class="sprint-chevron">▶</span>
+                <span class="sprint-name">バックログ</span>
+                <span class="sprint-meta">1 課題</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPERATION STEPS: Step 4 -->
+    <div class="ops-block">
+      <div class="ops-block-header">
+        <div class="ops-block-header-icon">🖱</div>
+        <div class="ops-block-title">【操作手順】 スプリント計画 — ストーリーポイントの見積もり & バックログをスプリントへ移動</div>
+      </div>
+      <ul class="ops-list">
+        <li>
+          <div class="ops-num">1</div>
+          <div class="ops-content">
+            バックログ画面でストーリーポイントを追加する課題の行をクリックして、<strong>詳細パネル</strong>を開く
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">2</div>
+          <div class="ops-content">
+            詳細パネル右側の <span class="ops-click">ストーリーポイント見積もり</span> フィールドをクリックし、数値を入力する
+            <div class="ops-sub">
+              <div class="ops-sub-row"><span class="ops-sub-label">EC-1 (認証)</span><span class="ops-input">5</span> と入力してEnter</div>
+              <div class="ops-sub-row"><span class="ops-sub-label">EC-2 (カート)</span><span class="ops-input">8</span> と入力してEnter</div>
+              <div class="ops-sub-row"><span class="ops-sub-label">EC-4 (バグ)</span><span class="ops-input">3</span> と入力してEnter</div>
+              <div class="ops-sub-row"><span class="ops-sub-label">EC-5 (調査)</span><span class="ops-input">2</span> と入力してEnter</div>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">3</div>
+          <div class="ops-content">
+            必要に応じてサブタスクを追加する：詳細パネルの <strong>「サブタスク」</strong> セクションにある <span class="ops-click">サブタスクを追加</span> をクリック → タイトルを入力して確定する
+            <span class="ops-note">例：EC-1 のサブタスクとして「APIエンドポイント設計」「フロントエンド認証フォーム実装」「テスト作成」を追加</span>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">4</div>
+          <div class="ops-content">
+            バックログのストーリー行を <span class="ops-drag">⠿ ドラッグ</span> してスプリントブロックの中へ移動させる（またはストーリーを右クリック → <span class="ops-click">スプリントへ移動</span> を選択）
+            <span class="ops-note">スプリントヘッダーに合計ポイント数が表示されます（例：18pt）</span>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">5</div>
+          <div class="ops-content">
+            チームでポイント合計を確認し、過不足を調整したら計画完了
+            <span class="ops-note">💡 チームの過去ベロシティ（平均完了pt）を超えないように調整してください</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ===== STEP 5 ===== -->
+  <section class="step-section" id="step5">
+    <div class="step-header">
+      <div class="step-num">05</div>
+      <div>
+        <div class="step-title">スプリントの開始 — アクティブスプリント（ボード）</div>
+        <div class="step-desc">Todo → In Progress → Done の流れで作業を進める</div>
+      </div>
+    </div>
+
+    <p class="prose">
+      スプリントを開始すると <strong>スクラムボード</strong> が使えるようになります。
+      各課題を <code>To Do</code> → <code>In Progress</code> → <code>Done</code> と移動させて進捗を可視化します。
+    </p>
+
+    <!-- Board Mockup -->
+    <div class="card">
+      <div class="card-title">🖥 Jira画面 — アクティブスプリント ボード（Sprint 1 進行中）</div>
+      <div class="jira-window">
+        <div class="jira-topbar">
+          <div class="jira-logo"><div class="jira-logo-icon">J</div>Jira</div>
+          <div style="margin-left:16px; color:rgba(255,255,255,0.7); font-size:13px;">ECサイト開発 › Sprint 1</div>
+          <div class="jira-search">🔍 検索</div>
+        </div>
+        <div class="jira-body">
+          <div class="jira-sidebar">
+            <div class="jira-project-header">
+              <div class="jira-proj-icon">EC</div>
+              <div><div class="jira-proj-name">ECサイト開発</div><div class="jira-proj-type">スクラム</div></div>
+            </div>
+            <div class="jira-nav-item active" style="background:#e9f2ff; color:#0052cc; border-left:3px solid #0052cc; padding-left:13px;"><div class="jira-nav-icon">📋</div>ボード</div>
+            <div class="jira-nav-item"><div class="jira-nav-icon">📝</div>バックログ</div>
+            <div class="jira-nav-item"><div class="jira-nav-icon">📊</div>レポート</div>
+          </div>
+          <div class="jira-content" style="background:#f4f5f7;">
+            <div style="padding:16px 20px 8px; background:#fff; border-bottom:1px solid #dfe1e6; display:flex; align-items:center; justify-content:space-between;">
+              <div>
+                <div style="font-size:11px; color:#6b778c;">ECサイト開発</div>
+                <div style="font-size:18px; font-weight:700; color:#172b4d;">Sprint 1 — 認証・カート機能</div>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <span style="font-size:12px; color:#6b778c; background:#e3fcef; padding:3px 10px; border-radius:3px; font-weight:600;">残り 12日</span>
+                <button class="jira-btn jira-btn-secondary" style="font-size:12px;">スプリントを完了</button>
+              </div>
+            </div>
+            <div class="jira-board">
+              <!-- TO DO -->
+              <div class="board-col">
+                <div class="board-col-header">TO DO <span class="col-count">2</span></div>
+                <div class="board-col-body">
+                  <div class="board-card priority-high">
+                    <div class="board-card-summary">顧客としてアカウントを作成し、過去の購入履歴を確認したい</div>
+                    <div class="board-card-footer">
+                      <div class="board-card-avatar" style="background:#0052cc;">田</div>
+                      <span class="board-card-key">EC-1</span>
+                      <span class="board-card-pts">5pt</span>
+                    </div>
+                  </div>
+                  <div class="board-card priority-med">
+                    <div class="board-card-summary">決済APIのドキュメントを読んでインテグレーション方針をまとめる</div>
+                    <div class="board-card-footer">
+                      <div class="board-card-avatar" style="background:#00b8d9;">渡</div>
+                      <span class="board-card-key">EC-5</span>
+                      <span class="board-card-pts">2pt</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- IN PROGRESS -->
+              <div class="board-col">
+                <div class="board-col-header">IN PROGRESS <span class="col-count">2</span></div>
+                <div class="board-col-body">
+                  <div class="board-card priority-high">
+                    <div class="board-card-summary">ゲストとして商品をカートに追加し、ログインなしで決済を完了したい</div>
+                    <div class="board-card-footer">
+                      <div class="board-card-avatar" style="background:#36b37e;">佐</div>
+                      <span class="board-card-key">EC-2</span>
+                      <span class="board-card-pts">8pt</span>
+                    </div>
+                  </div>
+                  <div class="board-card priority-high">
+                    <div class="board-card-summary">モバイル表示でカートボタンが重なって押せない</div>
+                    <div class="board-card-footer">
+                      <div class="board-card-avatar" style="background:#ff5630;">伊</div>
+                      <span class="board-card-key">EC-4</span>
+                      <span class="board-card-pts">3pt</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- DONE -->
+              <div class="board-col">
+                <div class="board-col-header">DONE <span class="col-count">0</span></div>
+                <div class="board-col-body">
+                  <div style="padding:24px 12px; text-align:center; color:#97a0af; font-size:12px;">
+                    完了した課題がここに表示されます
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPERATION STEPS: Step 5 -->
+    <div class="ops-block">
+      <div class="ops-block-header">
+        <div class="ops-block-header-icon">🖱</div>
+        <div class="ops-block-title">【操作手順】 スプリントを開始し、ボードで課題を管理する</div>
+      </div>
+      <ul class="ops-list">
+        <li>
+          <div class="ops-num">1</div>
+          <div class="ops-content">
+            バックログ画面のスプリントブロック右上にある <span class="ops-click">スプリントを開始</span> ボタンをクリックする
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">2</div>
+          <div class="ops-content">
+            確認ダイアログで <strong>スプリント名・期間・目標</strong> を最終確認し、<span class="ops-click">開始</span> をクリックする
+            <span class="ops-note">開始後は自動的にボード画面（アクティブスプリント）に切り替わります</span>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">3</div>
+          <div class="ops-content">
+            作業を開始したら、担当課題のカードを <span class="ops-drag">⠿ ドラッグ</span> して <strong>「TO DO」→「IN PROGRESS」</strong> 列へ移動させる
+            <span class="ops-note">または課題カードをクリックして開き、ステータスドロップダウンから「進行中」を選択</span>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">4</div>
+          <div class="ops-content">
+            課題をクリックして詳細パネルを開き、作業状況を<strong>コメント欄</strong>に記録する
+            <div class="ops-sub">
+              <div class="ops-sub-row"><span class="ops-sub-label">コメント追加</span>詳細パネル下部の <span class="ops-click">コメントを追加…</span> をクリック → テキスト入力 → <span class="ops-click">保存</span></div>
+              <div class="ops-sub-row"><span class="ops-sub-label">作業時間記録</span>右パネルの <span class="ops-click">時間を記録</span> → <span class="ops-input">2h</span> などと入力して保存</div>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">5</div>
+          <div class="ops-content">
+            課題の作業が完了したら、カードを <span class="ops-drag">⠿ ドラッグ</span> して <strong>「DONE」</strong> 列へ移動させる
+            <span class="ops-note">DoneになるとバーンダウンチャートのY値が自動的に減少します</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ===== STEP 6 ===== -->
+  <section class="step-section" id="step6">
+    <div class="step-header">
+      <div class="step-num">06</div>
+      <div>
+        <div class="step-title">デイリースタンドアップ</div>
+        <div class="step-desc">毎朝15分、チームの障害を取り除く</div>
+      </div>
+    </div>
+
+    <div class="ceremony-grid">
+      <div class="ceremony-card standup">
+        <div class="ceremony-title">🧍 デイリースタンドアップ</div>
+        <div class="ceremony-meta">
+          <div class="ceremony-row"><strong>出席者</strong>開発チーム（主）</div>
+          <div class="ceremony-row"><strong>タイミング</strong>毎朝（同じ時間）</div>
+          <div class="ceremony-row"><strong>所要時間</strong>最大15分（立ったまま）</div>
+          <div class="ceremony-row"><strong>目的</strong>進捗共有・ブロッカー解消</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💬 3つの質問 — 毎日各メンバーが答える</div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div class="info-box">
+          <p>① <strong>昨日何を完了したか？</strong><br>
+          例：「EC-4のカートボタンのCSS修正を完了し、レビュー依頼を出しました。」</p>
+        </div>
+        <div class="info-box">
+          <p>② <strong>今日何に取り組むか？</strong><br>
+          例：「EC-1のユーザー認証APIのバックエンド実装に着手します。」</p>
+        </div>
+        <div class="info-box" style="background:rgba(255,86,48,0.07); border-color:rgba(255,86,48,0.3);">
+          <p>③ <strong>何かブロックされていることはあるか？</strong><br>
+          例：「認証サーバーの環境変数が本番と異なっていて動作確認できません → SCに相談したい」</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-box">
+      <div class="tip-icon">💡</div>
+      <div class="tip-text"><strong>プロのヒント:</strong> スタンドアップは<strong>詳細なステータス報告の場ではありません</strong>。問題を発見したらその場でなく、別途少人数でフォローアップしてください。</div>
+    </div>
+
+    <!-- OPERATION STEPS: Step 6 -->
+    <div class="ops-block">
+      <div class="ops-block-header">
+        <div class="ops-block-header-icon">🖱</div>
+        <div class="ops-block-title">【操作手順】 スタンドアップ中にJiraボードを活用する</div>
+      </div>
+      <ul class="ops-list">
+        <li>
+          <div class="ops-num">1</div>
+          <div class="ops-content">
+            左サイドバーの <span class="ops-click">ボード</span> をクリックしてアクティブスプリント画面を開き、プロジェクター等に映す
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">2</div>
+          <div class="ops-content">
+            ボード右上の <span class="ops-click">担当者</span> フィルターをクリックし、発言中のメンバーのアバターを選択してそのメンバーの課題だけを絞り込む
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">3</div>
+          <div class="ops-content">
+            メンバーが「今日着手する」と報告した課題を、その場で <span class="ops-drag">⠿ ドラッグ</span> して <strong>「IN PROGRESS」</strong> 列へ移動させる
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">4</div>
+          <div class="ops-content">
+            ブロッカーがある場合は、該当課題をクリックして開き、<span class="ops-click">🚩 フラグを追加</span> をクリックして障害フラグを立てる
+            <span class="ops-note">フラグが立つとボードカードにオレンジのハイライトが表示され、チーム全員が認識できます</span>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">5</div>
+          <div class="ops-content">
+            全員の共有が終わったら <span class="ops-click">担当者: すべて</span> をクリックしてフィルターをリセットし、ボード全体を確認する
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- NOTE: デイリースタンドアップとJira登録の関係 -->
+    <div class="card">
+      <div class="card-title">📌 注記　デイリースタンドアップの会話とJira登録について</div>
+      <div class="info-box">
+        <p>デイリースタンドアップの<strong>会話自体はJiraに登録しません</strong>。スタンドアップは口頭（またはSlack等）で行うもので、Jiraへの登録は会話の<strong>結果だけ</strong>です。</p>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <table style="width:100%; border-collapse:collapse; font-size:13px; color:var(--text-muted);">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);">
+              <th style="text-align:left; padding:8px 12px; color:var(--text-dim); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">内容</th>
+              <th style="text-align:left; padding:8px 12px; color:var(--text-dim); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">Jira操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:8px 12px;">昨日完了した</td>
+              <td style="padding:8px 12px;">チケットのステータスを <span class="ops-select">Done</span> に変更</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:8px 12px;">今日取り組む</td>
+              <td style="padding:8px 12px;">チケットを <span class="ops-select">In Progress</span> に変更</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:8px 12px;">ブロッカーあり</td>
+              <td style="padding:8px 12px;">コメント欄に障害内容を記録 / 担当者を変更</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 12px;">新しいタスクが発生</td>
+              <td style="padding:8px 12px;">バックログに新チケットを作成</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tip-box">
+        <div class="tip-icon">💡</div>
+        <div class="tip-text">
+          <strong>ポイント</strong><br>
+          スタンドアップは15分以内の短い同期が目的なので、Jiraへの入力は<strong>ミーティング前後に各自が更新</strong>するのが一般的です。「昨日やったこと」を話す前に<strong>前日の終業時にステータスを更新しておく</strong>とスムーズに進みます。ブロッカーの内容はJiraのコメントに残しておくと、後から経緯が追えて便利です。
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ===== STEP 7 ===== -->
+  <section class="step-section" id="step7">
+    <div class="step-header">
+      <div class="step-num">07</div>
+      <div>
+        <div class="step-title">バーンダウンチャートの確認</div>
+        <div class="step-desc">スプリント中盤でリスクを早期発見する</div>
+      </div>
+    </div>
+
+    <p class="prose">
+      <strong>バーンダウンチャート</strong>は、スプリントの残作業量（ストーリーポイント）を時間軸で可視化するグラフです。
+      X軸が時間、Y軸がストーリーポイント。灰色の線が理想ライン、赤色が実績です。
+    </p>
+
+    <!-- Burndown Chart Mockup -->
+    <div class="card">
+      <div class="card-title">🖥 Jira画面 — バーンダウンチャート（Sprint 1 7日目）</div>
+      <div class="jira-window">
+        <div class="jira-topbar">
+          <div class="jira-logo"><div class="jira-logo-icon">J</div>Jira</div>
+          <div style="margin-left:16px; color:rgba(255,255,255,0.7); font-size:13px;">ECサイト開発 › レポート</div>
+          <div class="jira-search">🔍 検索</div>
+        </div>
+        <div class="jira-body">
+          <div class="jira-sidebar">
+            <div class="jira-project-header">
+              <div class="jira-proj-icon">EC</div>
+              <div><div class="jira-proj-name">ECサイト開発</div><div class="jira-proj-type">スクラム</div></div>
+            </div>
+            <div class="jira-nav-item"><div class="jira-nav-icon">📋</div>ボード</div>
+            <div class="jira-nav-item"><div class="jira-nav-icon">📝</div>バックログ</div>
+            <div class="jira-nav-item active"><div class="jira-nav-icon">📊</div>レポート</div>
+          </div>
+          <div class="jira-content">
+            <div style="padding:16px 24px; border-bottom:1px solid #dfe1e6;">
+              <div style="font-size:11px; color:#6b778c;">レポート</div>
+              <div style="font-size:20px; font-weight:700; color:#172b4d;">バーンダウンチャート</div>
+            </div>
+            <div style="padding:16px 24px; border-bottom:1px solid #f4f5f7;">
+              <span style="font-size:13px; font-weight:600; color:#172b4d;">Sprint 1 — 認証・カート機能</span>
+              <span style="font-size:12px; color:#6b778c; margin-left:12px;">3/25 〜 4/7 ／ 合計 18pt</span>
+            </div>
+            <div style="padding:20px 24px;">
+              <svg viewBox="0 0 560 200" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:200px; background:#fff;">
+                <!-- Grid lines -->
+                <line x1="50" y1="20" x2="50" y2="170" stroke="#dfe1e6" stroke-width="1"/>
+                <line x1="50" y1="170" x2="540" y2="170" stroke="#dfe1e6" stroke-width="1"/>
+                <!-- H grid -->
+                <line x1="50" y1="20" x2="540" y2="20" stroke="#f4f5f7" stroke-width="1"/>
+                <line x1="50" y1="57.5" x2="540" y2="57.5" stroke="#f4f5f7" stroke-width="1"/>
+                <line x1="50" y1="95" x2="540" y2="95" stroke="#f4f5f7" stroke-width="1"/>
+                <line x1="50" y1="132.5" x2="540" y2="132.5" stroke="#f4f5f7" stroke-width="1"/>
+                <!-- Y axis labels -->
+                <text x="44" y="24" text-anchor="end" font-size="10" fill="#6b778c">18</text>
+                <text x="44" y="61" text-anchor="end" font-size="10" fill="#6b778c">13</text>
+                <text x="44" y="98" text-anchor="end" font-size="10" fill="#6b778c">9</text>
+                <text x="44" y="136" text-anchor="end" font-size="10" fill="#6b778c">4</text>
+                <text x="44" y="174" text-anchor="end" font-size="10" fill="#6b778c">0</text>
+                <!-- X axis labels -->
+                <text x="50" y="184" text-anchor="middle" font-size="9" fill="#6b778c">3/25</text>
+                <text x="120" y="184" text-anchor="middle" font-size="9" fill="#6b778c">3/27</text>
+                <text x="190" y="184" text-anchor="middle" font-size="9" fill="#6b778c">3/29</text>
+                <text x="260" y="184" text-anchor="middle" font-size="9" fill="#6b778c">3/31</text>
+                <text x="330" y="184" text-anchor="middle" font-size="9" fill="#6b778c">4/2</text>
+                <text x="400" y="184" text-anchor="middle" font-size="9" fill="#6b778c">4/4</text>
+                <text x="470" y="184" text-anchor="middle" font-size="9" fill="#6b778c">4/6</text>
+                <text x="540" y="184" text-anchor="middle" font-size="9" fill="#6b778c">4/7</text>
+                <!-- V grid lines -->
+                <line x1="120" y1="20" x2="120" y2="170" stroke="#f4f5f7" stroke-width="1"/>
+                <line x1="190" y1="20" x2="190" y2="170" stroke="#f4f5f7" stroke-width="1"/>
+                <line x1="260" y1="20" x2="260" y2="170" stroke="#f4f5f7" stroke-width="1"/>
+                <line x1="330" y1="20" x2="330" y2="170" stroke="#f4f5f7" stroke-width="1"/>
+                <line x1="400" y1="20" x2="400" y2="170" stroke="#f4f5f7" stroke-width="1"/>
+                <line x1="470" y1="20" x2="470" y2="170" stroke="#f4f5f7" stroke-width="1"/>
+                <!-- Guideline (ideal) -->
+                <line x1="50" y1="20" x2="540" y2="170" stroke="#97a0af" stroke-width="2" stroke-dasharray="6,4"/>
+                <!-- Actual burndown (up to day 7) -->
+                <polyline points="50,20 120,20 190,42 260,62 330,85" fill="none" stroke="#de350b" stroke-width="2.5"/>
+                <!-- Current day marker -->
+                <line x1="330" y1="20" x2="330" y2="170" stroke="#0052cc" stroke-width="1" stroke-dasharray="4,3"/>
+                <text x="335" y="34" font-size="10" fill="#0052cc">今日</text>
+                <!-- Points on actual -->
+                <circle cx="50" cy="20" r="4" fill="#de350b"/>
+                <circle cx="120" cy="20" r="4" fill="#de350b"/>
+                <circle cx="190" cy="42" r="4" fill="#de350b"/>
+                <circle cx="260" cy="62" r="4" fill="#de350b"/>
+                <circle cx="330" cy="85" r="4" fill="#de350b"/>
+                <!-- Legend -->
+                <line x1="380" y1="30" x2="410" y2="30" stroke="#97a0af" stroke-width="2" stroke-dasharray="5,3"/>
+                <text x="415" y="34" font-size="10" fill="#6b778c">ガイドライン</text>
+                <line x1="380" y1="48" x2="410" y2="48" stroke="#de350b" stroke-width="2.5"/>
+                <text x="415" y="52" font-size="10" fill="#6b778c">残作業</text>
+              </svg>
+              <div style="font-size:12px; color:#6b778c; margin-top:8px;">
+                📌 実績（赤）がガイドライン（灰）より<strong style="color:#de350b;">上</strong>にある = 遅れ気味。スタンドアップで要確認。
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Antipatterns -->
+    <div class="card">
+      <div class="card-title">⚠️ 注意すべきアンチパターン</div>
+      <ul class="antipattern-list">
+        <li>
+          <div class="ap-icon">⚡</div>
+          <div><strong style="color:var(--text);">スプリントを次々と早期終了する</strong> — 作業量が少なすぎる。バックログの見積もりを見直す必要あり。</div>
+        </li>
+        <li>
+          <div class="ap-icon">⚡</div>
+          <div><strong style="color:var(--text);">予測が常に外れる</strong> — コミット量が多すぎる。チームのベロシティに合った量に調整する。</div>
+        </li>
+        <li>
+          <div class="ap-icon">⚡</div>
+          <div><strong style="color:var(--text);">バーンダウンラインが急降下する</strong> — 作業を細かく分割できていない。サブタスクに分解すること。</div>
+        </li>
+        <li>
+          <div class="ap-icon">⚡</div>
+          <div><strong style="color:var(--text);">PO がスプリント途中でスコープを変更する</strong> — スプリントゴールへの集中を妨げる。変更は次スプリントのバックログへ。</div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- OPERATION STEPS: Step 7 -->
+    <div class="ops-block">
+      <div class="ops-block-header">
+        <div class="ops-block-header-icon">🖱</div>
+        <div class="ops-block-title">【操作手順】 バーンダウンチャートを確認する</div>
+      </div>
+      <ul class="ops-list">
+        <li>
+          <div class="ops-num">1</div>
+          <div class="ops-content">
+            左サイドバーの <span class="ops-click">レポート</span> をクリックする
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">2</div>
+          <div class="ops-content">
+            レポート一覧から <span class="ops-click">バーンダウンチャート</span> をクリックする
+            <span class="ops-note">レポートのドロップダウンが表示されない場合は「レポートを切り替え」をクリック</span>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">3</div>
+          <div class="ops-content">
+            画面上部のスプリント選択ドロップダウンから <span class="ops-select">Sprint 1 — 認証・カート機能</span> を選択する
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">4</div>
+          <div class="ops-content">
+            グラフを読み解く
+            <div class="ops-sub">
+              <div class="ops-sub-row"><span class="ops-sub-label">灰色の線</span>ガイドライン（理想的な消化ペース）</div>
+              <div class="ops-sub-row"><span class="ops-sub-label">赤色の線</span>実際の残作業量の推移</div>
+              <div class="ops-sub-row"><span class="ops-sub-label">赤 ＞ 灰</span>遅れている → スタンドアップで原因を確認</div>
+              <div class="ops-sub-row"><span class="ops-sub-label">赤 ＜ 灰</span>進んでいる → バックログから課題を追加検討</div>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">5</div>
+          <div class="ops-content">
+            スプリントレポートを確認するには、レポート切り替えドロップダウンから <span class="ops-click">スプリントレポート</span> を選択する
+            <span class="ops-note">バーンダウン・完了課題・未完了課題・スプリント後追加分が一覧で確認できます</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ===== STEP 8 ===== -->
+  <section class="step-section" id="step8">
+    <div class="step-header">
+      <div class="step-num">08</div>
+      <div>
+        <div class="step-title">スプリントレビュー & ふりかえり → 次のサイクルへ</div>
+        <div class="step-desc">スプリント終了時に成果を確認し、プロセスを改善する</div>
+      </div>
+    </div>
+
+    <div class="ceremony-grid">
+      <div class="ceremony-card review">
+        <div class="ceremony-title">🎯 スプリントレビュー（デモ）</div>
+        <div class="ceremony-meta">
+          <div class="ceremony-row"><strong>出席者</strong>開発チーム、SM、PO（+ 関係者）</div>
+          <div class="ceremony-row"><strong>タイミング</strong>スプリント最終日</div>
+          <div class="ceremony-row"><strong>所要時間</strong>2週間SP = 2時間</div>
+          <div class="ceremony-row"><strong>目的</strong>インクリメントの確認とバックログ更新</div>
+        </div>
+      </div>
+      <div class="ceremony-card retro">
+        <div class="ceremony-title">🔄 スプリントふりかえり</div>
+        <div class="ceremony-meta">
+          <div class="ceremony-row"><strong>出席者</strong>開発チーム、SM、PO</div>
+          <div class="ceremony-row"><strong>タイミング</strong>レビューの直後</div>
+          <div class="ceremony-row"><strong>所要時間</strong>2週間SP = 90分</div>
+          <div class="ceremony-row"><strong>目的</strong>プロセス・ツール・連携の内部改善</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sprint Report Mockup -->
+    <div class="card">
+      <div class="card-title">🖥 Jira画面 — スプリントレポート（Sprint 1 完了後）</div>
+      <div class="jira-window">
+        <div class="jira-topbar">
+          <div class="jira-logo"><div class="jira-logo-icon">J</div>Jira</div>
+          <div style="margin-left:16px; color:rgba(255,255,255,0.7); font-size:13px;">ECサイト開発 › レポート › スプリントレポート</div>
+        </div>
+        <div style="padding:20px 24px; background:#fff; border-bottom:1px solid #dfe1e6;">
+          <div style="font-size:11px; color:#6b778c;">Sprint 1 — 認証・カート機能 ／ 2026/03/25 〜 2026/04/07</div>
+          <div style="font-size:20px; font-weight:700; color:#172b4d; margin-top:4px;">スプリントレポート</div>
+          <div style="display:flex; gap:20px; margin-top:12px;">
+            <div style="background:#e3fcef; border-radius:6px; padding:10px 18px; text-align:center;">
+              <div style="font-size:22px; font-weight:800; color:#00875a;">13</div>
+              <div style="font-size:11px; color:#00875a; font-weight:600;">完了 pt</div>
+            </div>
+            <div style="background:#ffebe6; border-radius:6px; padding:10px 18px; text-align:center;">
+              <div style="font-size:22px; font-weight:800; color:#de350b;">5</div>
+              <div style="font-size:11px; color:#de350b; font-weight:600;">未完了 pt</div>
+            </div>
+            <div style="background:#deebff; border-radius:6px; padding:10px 18px; text-align:center;">
+              <div style="font-size:22px; font-weight:800; color:#0052cc;">72%</div>
+              <div style="font-size:11px; color:#0052cc; font-weight:600;">達成率</div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:16px 24px; background:#fff;">
+          <table class="report-table">
+            <thead>
+              <tr><th>課題</th><th>概要</th><th>担当</th><th>SP</th><th>ステータス</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span style="font-family:monospace; font-size:11px; color:#6b778c;">EC-2</span></td>
+                <td style="font-size:13px;">ゲストとしてカート→決済を完了したい</td>
+                <td><div style="width:24px;height:24px;border-radius:50%;background:#36b37e;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;">佐</div></td>
+                <td><span class="sp-badge">8</span></td>
+                <td><span class="issue-status status-done">Done</span></td>
+              </tr>
+              <tr>
+                <td><span style="font-family:monospace; font-size:11px; color:#6b778c;">EC-4</span></td>
+                <td style="font-size:13px;">モバイルカートボタン重なりバグ修正</td>
+                <td><div style="width:24px;height:24px;border-radius:50%;background:#ff5630;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;">伊</div></td>
+                <td><span class="sp-badge">3</span></td>
+                <td><span class="issue-status status-done">Done</span></td>
+              </tr>
+              <tr>
+                <td><span style="font-family:monospace; font-size:11px; color:#6b778c;">EC-5</span></td>
+                <td style="font-size:13px;">決済APIインテグレーション方針まとめ</td>
+                <td><div style="width:24px;height:24px;border-radius:50%;background:#00b8d9;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;">渡</div></td>
+                <td><span class="sp-badge">2</span></td>
+                <td><span class="issue-status status-done">Done</span></td>
+              </tr>
+              <tr style="opacity:0.6;">
+                <td><span style="font-family:monospace; font-size:11px; color:#6b778c;">EC-1</span></td>
+                <td style="font-size:13px;">顧客アカウント作成・購入履歴確認</td>
+                <td><div style="width:24px;height:24px;border-radius:50%;background:#0052cc;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;">田</div></td>
+                <td><span class="sp-badge high">5</span></td>
+                <td><span class="issue-status status-inprogress">In Progress</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="font-size:12px; color:#6b778c; margin-top:12px; padding:10px; background:#fff8f6; border-radius:4px; border-left:3px solid #ffab00;">
+            ⚠️ EC-1 は未完了のため、次スプリントのバックログに移動します。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Retrospective -->
+    <div class="card">
+      <div class="card-title">🔄 ふりかえりの3つの問い</div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div style="background:#e3fcef; border-radius:8px; padding:14px 18px; border-left:4px solid #36b37e;">
+          <div style="font-size:13px; font-weight:700; color:#006644; margin-bottom:4px;">✅ うまくいったこと</div>
+          <div style="font-size:13px; color:#172b4d;">「デイリースタンドアップでブロッカーを早期発見できた」「コードレビューのターンアラウンドが速かった」</div>
+        </div>
+        <div style="background:#fffae6; border-radius:8px; padding:14px 18px; border-left:4px solid #ffab00;">
+          <div style="font-size:13px; font-weight:700; color:#974f0c; margin-bottom:4px;">🔧 改善できること</div>
+          <div style="font-size:13px; color:#172b4d;">「EC-1は見積もりが甘かった。認証機能はサブタスクに分割すべきだった」</div>
+        </div>
+        <div style="background:#deebff; border-radius:8px; padding:14px 18px; border-left:4px solid #0052cc;">
+          <div style="font-size:13px; font-weight:700; color:#0052cc; margin-bottom:4px;">🚀 次回のアクション</div>
+          <div style="font-size:13px; color:#172b4d;">「5pt以上のストーリーは必ずサブタスクに分解してからスプリントに入れる」</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPERATION STEPS: Step 8a — Sprint Review -->
+    <div class="ops-block">
+      <div class="ops-block-header">
+        <div class="ops-block-header-icon">🖱</div>
+        <div class="ops-block-title">【操作手順①】 スプリントレビュー前にJiraで成果を確認する</div>
+      </div>
+      <ul class="ops-list">
+        <li>
+          <div class="ops-num">1</div>
+          <div class="ops-content">
+            左サイドバーの <span class="ops-click">レポート</span> → <span class="ops-click">スプリントレポート</span> をクリックして現在のスプリントレポートを開く
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">2</div>
+          <div class="ops-content">
+            レポートで「完了した作業」「未完了の作業」「スプリント中に追加された作業」の3セクションを確認する
+            <div class="ops-sub">
+              <div class="ops-sub-row"><span class="ops-sub-label">完了</span>緑チェック付きの課題 → デモ対象</div>
+              <div class="ops-sub-row"><span class="ops-sub-label">未完了</span>未完了の課題 → 次スプリントへの移動を判断</div>
+              <div class="ops-sub-row"><span class="ops-sub-label">追加分</span>スプリント後に追加された課題 → スコープ変動の確認</div>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">3</div>
+          <div class="ops-content">
+            レビューミーティング中にステークホルダーからフィードバックを受けたら、その場でバックログに新しい課題を追加する
+            <span class="ops-note">左サイドバーの <span class="ops-click">バックログ</span> → <span class="ops-click">+ 課題を作成</span> でその場で追加できます</span>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">4</div>
+          <div class="ops-content">
+            未完了課題の処理を決定し、操作する
+            <div class="ops-sub">
+              <div class="ops-sub-row"><span class="ops-sub-label">バックログへ</span>未完了課題を右クリック → <span class="ops-click">バックログへ移動</span></div>
+              <div class="ops-sub-row"><span class="ops-sub-label">次のSPへ</span>未完了課題を右クリック → <span class="ops-click">次のスプリントへ移動</span></div>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- OPERATION STEPS: Step 8b — Sprint Complete -->
+    <div class="ops-block">
+      <div class="ops-block-header">
+        <div class="ops-block-header-icon">🖱</div>
+        <div class="ops-block-title">【操作手順②】 スプリントを完了する（Jira操作）</div>
+      </div>
+      <ul class="ops-list">
+        <li>
+          <div class="ops-num">1</div>
+          <div class="ops-content">
+            左サイドバーの <span class="ops-click">ボード</span> をクリックしてアクティブスプリント画面を開く
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">2</div>
+          <div class="ops-content">
+            ボード右上の <span class="ops-click">スプリントを完了</span> ボタンをクリックする
+            <span class="ops-note">⚠️ このボタンはスプリントの開始日を過ぎないと表示されません</span>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">3</div>
+          <div class="ops-content">
+            確認ダイアログで未完了課題の処理先を選択する
+            <div class="ops-sub">
+              <div class="ops-sub-row"><span class="ops-sub-label">移動先</span><span class="ops-select">バックログ</span> または <span class="ops-select">新しいスプリント</span> を選択</div>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">4</div>
+          <div class="ops-content">
+            <span class="ops-click">スプリントを完了</span> をクリックして確定する → スプリントレポートが自動生成されます
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- OPERATION STEPS: Step 8c — Retrospective in Jira -->
+    <div class="ops-block">
+      <div class="ops-block-header">
+        <div class="ops-block-header-icon">🖱</div>
+        <div class="ops-block-title">【操作手順③】 ふりかえりのアクションをバックログに追加する</div>
+      </div>
+      <ul class="ops-list">
+        <li>
+          <div class="ops-num">1</div>
+          <div class="ops-content">
+            ふりかえりで「次回改善すること」が決まったら、<span class="ops-click">バックログ</span> を開き <span class="ops-click">+ 課題を作成</span> をクリックする
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">2</div>
+          <div class="ops-content">
+            課題タイプを <span class="ops-select">タスク</span> に設定し、改善アクションをタイトルに入力する
+            <div class="ops-sub">
+              <div class="ops-sub-row"><span class="ops-sub-label">タイトル例</span><span class="ops-input">【改善】5pt以上のストーリーはサブタスクに分解するルールを徹底</span></div>
+              <div class="ops-sub-row"><span class="ops-sub-label">ラベル</span><span class="ops-select">retrospective</span> などのラベルを付けて識別しやすくする</div>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">3</div>
+          <div class="ops-content">
+            次のスプリントのバックログ上位に <span class="ops-drag">⠿ ドラッグ</span> して移動させ、計画ミーティングで必ず取り上げるようにする
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">4</div>
+          <div class="ops-content">
+            次のスプリントを作成し、ステップ3から繰り返す 🔁
+            <span class="ops-note">✅ これでスクラムの1サイクルが完了です。継続することでチームのベロシティが安定していきます。</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Sprint Flow -->
+    <div class="card">
+      <div class="card-title">♻️ スクラムのサイクル（ステップ2から繰り返す）</div>
+      <div class="sprint-flow">
+        <div class="flow-step">
+          <div class="flow-box"><div class="flow-box-title">バックログ管理</div><div class="flow-box-sub">優先順位付け</div></div>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-box"><div class="flow-box-title">スプリント計画</div><div class="flow-box-sub">ゴール設定</div></div>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-box" style="border-color:var(--accent-light);"><div class="flow-box-title" style="color:var(--accent-light);">スプリント実行</div><div class="flow-box-sub">デイリーSU</div></div>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-box"><div class="flow-box-title">レビュー</div><div class="flow-box-sub">デモ</div></div>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-box"><div class="flow-box-title">ふりかえり</div><div class="flow-box-sub">改善</div></div>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-box" style="border-color:var(--green);"><div class="flow-box-title" style="color:var(--green);">次のスプリント</div><div class="flow-box-sub">繰り返し</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="lecture-footer">
+  <p>このレクチャーは <a href="https://www.atlassian.com/ja/agile/tutorials/how-to-do-scrum-with-jira" target="_blank">Atlassian 公式チュートリアル</a> をベースに作成されました。</p>
+  <p style="margin-top:8px; color:var(--text-dim);">Jira は Atlassian Corporation の商標です。</p>
+</footer>
+
+<script>
+// Fibonacci chip selection
+const fibDescs = {
+  '1': '1pt — とても小さい変更。テキスト修正など数時間で終わる作業。',
+  '2': '2pt — 小さな変更。既知の実装パターン。半日〜1日程度。',
+  '3': '3pt — 中程度。実装方法は明確だが、それなりの作業量がある。',
+  '5': '5pt — やや複雑。複数コンポーネントにまたがる。1〜2日。',
+  '8': '8pt — 複雑。調査や設計も必要。半週間程度。分割を検討。',
+  '13': '13pt — 大きい。スプリントの大部分を占める。分割を強く推奨。',
+  '20': '20pt — 非常に大きい。エピックに格上げしてブレークダウンすること。',
+  '40': '40pt — 推定不能に近い。スプリントに入れる前に小さく分割が必須。',
+};
+
+function selectFib(el, val) {
+  document.querySelectorAll('.fib-chip').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('fibDesc').textContent = fibDescs[val] || '';
+}
+
+// Intersection Observer for animations
+const sections = document.querySelectorAll('.step-section');
+const navItems = document.querySelectorAll('.nav-item');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      const id = entry.target.id;
+      navItems.forEach(n => {
+        n.classList.toggle('active', n.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { threshold: 0.1, rootMargin: '-60px 0px -40% 0px' });
+
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
