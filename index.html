@@ -929,6 +929,7 @@
   <a class="nav-item" href="#step2"><div class="nav-num">2</div> バックログ</a>
   <a class="nav-item" href="#step3"><div class="nav-num">3</div> スプリント作成</a>
   <a class="nav-item" href="#step4"><div class="nav-num">4</div> スプリント計画</a>
+  <a class="nav-item" href="#step-workflow"><div class="nav-num" style="background:var(--green);">W</div> ワークフロー</a>
   <a class="nav-item" href="#step5"><div class="nav-num">5</div> スプリント開始</div></a>
   <a class="nav-item" href="#step6"><div class="nav-num">6</div> デイリースタンドアップ</a>
   <a class="nav-item" href="#step7"><div class="nav-num">7</div> バーンダウン</a>
@@ -1868,6 +1869,155 @@
           </div>
         </li>
       </ul>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ===== STEP WORKFLOW ===== -->
+  <section class="step-section" id="step-workflow">
+    <div class="step-header">
+      <div class="step-num" style="background:linear-gradient(135deg, var(--green), #1a7a4a);">W</div>
+      <div>
+        <div class="step-title">ワークフローのカスタマイズ</div>
+        <div class="step-desc">TO DO → 進行中 → レビュー待ち → 完了 の4ステータスで運用する</div>
+      </div>
+    </div>
+
+    <p class="prose">
+      2週間スプリントでは、ステータスを増やしすぎると更新作業がオーバーヘッドになります。
+      <strong>TO DO → 進行中 → レビュー待ち → 完了</strong> の4ステータスが最もバランスの良い構成です。
+      設計・実装・テストの詳細はデイリースタンドアップで口頭確認し、必要に応じてサブタスクで管理します。
+    </p>
+
+    <div class="info-box">
+      <p>📌 <strong>推奨ワークフロー（2週間スプリント向け）</strong><br><br>
+      <strong>TO DO</strong> → <strong>進行中</strong> → <strong>レビュー待ち</strong> → <strong>完了</strong><br><br>
+      設計・実装・テストの進捗は <strong>デイリースタンドアップで口頭確認</strong> 、詳細な作業分担は <strong>サブタスク</strong> で管理するのが推奨です。
+      </p>
+    </div>
+
+    <div class="tip-box" style="margin-bottom:20px;">
+      <div class="tip-icon">💡</div>
+      <div class="tip-text">
+        <strong>ステータスを増やす判断基準</strong><br>
+        まずシンプルな4ステータスで運用し、チームから「もっと細かく見たい」という声が上がってから追加するのがスクラムの精神に合っています。ステータス更新が目的にならないよう注意してください。
+      </div>
+    </div>
+
+    <div class="ops-block">
+      <div class="ops-block-header">
+        <div class="ops-block-header-icon">🖱</div>
+        <div class="ops-block-title">【操作手順①】 ステータスボタンのドロップダウンから直接追加する（最も簡単）</div>
+      </div>
+      <ul class="ops-list">
+        <li>
+          <div class="ops-num">1</div>
+          <div class="ops-content">
+            チケット詳細画面を開き、左上の <span class="ops-click">ステータスボタン（例：進行中 ▼）</span> をクリックする
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">2</div>
+          <div class="ops-content">
+            ドロップダウン下部の <span class="ops-click">ステータスを作成</span> をクリックする
+            <span class="ops-note">⚠️ グローバルの⚙（画面右上の歯車アイコン）は個人設定です。ここからはプロジェクト設定にアクセスできません</span>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">3</div>
+          <div class="ops-content">
+            ステータス名を入力して追加する
+            <div class="ops-sub">
+              <div class="ops-sub-row"><span class="ops-sub-label">追加するステータス</span><span class="ops-input">レビュー待ち</span>　カテゴリ：<span class="ops-select">進行中</span></div>
+            </div>
+            <span class="ops-note">💡 TO DO・進行中・完了はデフォルトで存在するため追加不要です。「レビュー待ち」のみ追加します</span>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">4</div>
+          <div class="ops-content">
+            追加後、ドロップダウンに <span class="ops-select">レビュー待ち</span> が表示されれば完了
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="ops-block">
+      <div class="ops-block-header">
+        <div class="ops-block-header-icon">🖱</div>
+        <div class="ops-block-title">【操作手順②】 ワークフロー編集画面から設定する（管理者向け）</div>
+      </div>
+      <ul class="ops-list">
+        <li>
+          <div class="ops-num">1</div>
+          <div class="ops-content">
+            チケット詳細画面のステータスボタン <span class="ops-click">▼</span> をクリックし、<span class="ops-click">ワークフローを表示</span> を選択する
+            <span class="ops-note">💡 チケット詳細右下の <span class="ops-click">⚙ 設定</span> → <span class="ops-click">ワークフロー</span> からでも開けます</span>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">2</div>
+          <div class="ops-content">
+            ワークフロー編集画面で <span class="ops-click">ステータスを追加</span> をクリックし、以下を追加する
+            <div class="ops-sub">
+              <div class="ops-sub-row"><span class="ops-sub-label">ステータス名</span><span class="ops-input">レビュー待ち</span>　カテゴリ：<span class="ops-select">進行中</span></div>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">3</div>
+          <div class="ops-content">
+            各ステータス間を矢印（トランジション）でドラッグしてつなぐ
+            <div class="ops-sub">
+              <div class="ops-sub-row"><span class="ops-sub-label">遷移の流れ</span>TO DO → 進行中 → レビュー待ち → 完了</div>
+            </div>
+            <span class="ops-note">⚠️ トランジションがつながっていないとステータスがドロップダウンに表示されません。ワークフロー図で矢印の接続を必ず確認してください</span>
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">4</div>
+          <div class="ops-content">
+            設定が完了したら右上の <span class="ops-click">更新</span> ボタンをクリックして保存する
+            <span class="ops-note">⚠️ このバージョンのJiraでは「公開」ではなく「更新」ボタンで保存されます</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="ops-block">
+      <div class="ops-block-header">
+        <div class="ops-block-header-icon">🖱</div>
+        <div class="ops-block-title">【操作手順③】 チケットのステータスを変更する</div>
+      </div>
+      <ul class="ops-list">
+        <li>
+          <div class="ops-num">1</div>
+          <div class="ops-content">
+            チケット詳細画面を開き、左上の <span class="ops-click">ステータスボタン（例：進行中 ▼）</span> をクリックする
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">2</div>
+          <div class="ops-content">
+            ドロップダウンから <span class="ops-select">レビュー待ち</span> などを選択する
+          </div>
+        </li>
+        <li>
+          <div class="ops-num">3</div>
+          <div class="ops-content">
+            ボード画面でチケットカードを <span class="ops-drag">⠿ ドラッグ</span> して該当ステータスの列に移動することでも変更できる
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="tip-box">
+      <div class="tip-icon">💡</div>
+      <div class="tip-text">
+        <strong>ワークフローは課題タイプごとに設定できます</strong><br>
+        Story専用・Task専用に異なるワークフローを割り当てたい場合は、ワークフローを課題タイプごとに別々に作成します。設定変更には<strong>プロジェクト管理者権限</strong>が必要です。権限がない場合はステータスボタンの「ステータスを作成」から追加してください。
+      </div>
     </div>
   </section>
 
